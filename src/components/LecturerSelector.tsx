@@ -1,9 +1,8 @@
 
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Plus, User } from "lucide-react";
+import { X, User } from "lucide-react";
 
 interface LecturerSelectorProps {
   selectedLecturers: string[];
@@ -18,7 +17,6 @@ const sampleLecturers = [
 ];
 
 const LecturerSelector = ({ selectedLecturers, onLecturersChange }: LecturerSelectorProps) => {
-  const [customLecturer, setCustomLecturer] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   const addLecturer = (lecturer: string) => {
@@ -29,19 +27,6 @@ const LecturerSelector = ({ selectedLecturers, onLecturersChange }: LecturerSele
 
   const removeLecturer = (lecturer: string) => {
     onLecturersChange(selectedLecturers.filter(l => l !== lecturer));
-  };
-
-  const addCustomLecturer = () => {
-    if (customLecturer.trim() && !selectedLecturers.includes(customLecturer.trim())) {
-      addLecturer(customLecturer.trim());
-      setCustomLecturer("");
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      addCustomLecturer();
-    }
   };
 
   const filteredLecturers = sampleLecturers.filter(lecturer =>
@@ -110,27 +95,6 @@ const LecturerSelector = ({ selectedLecturers, onLecturersChange }: LecturerSele
         {filteredLecturers.length === 0 && (
           <p className="text-sm text-gray-500 text-center py-4">No lecturers found</p>
         )}
-      </div>
-
-      {/* Add custom lecturer */}
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-gray-700">Add a custom lecturer:</p>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Enter lecturer name..."
-            value={customLecturer}
-            onChange={(e) => setCustomLecturer(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="flex-1"
-          />
-          <Button
-            onClick={addCustomLecturer}
-            disabled={!customLecturer.trim()}
-            size="sm"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
     </div>
   );

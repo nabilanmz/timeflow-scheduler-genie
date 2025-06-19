@@ -13,11 +13,11 @@ const MaxDaysSelector = ({ maxDays, onMaxDaysChange }: MaxDaysSelectorProps) => 
   };
 
   const quickOptions = [
+    { days: 1, label: "Minimal (1 day)" },
+    { days: 2, label: "Light (2 days)" },
     { days: 3, label: "Part-time (3 days)" },
     { days: 4, label: "Flexible (4 days)" },
     { days: 5, label: "Standard (5 days)" },
-    { days: 6, label: "Intensive (6 days)" },
-    { days: 7, label: "Full week (7 days)" },
   ];
 
   return (
@@ -54,14 +54,14 @@ const MaxDaysSelector = ({ maxDays, onMaxDaysChange }: MaxDaysSelectorProps) => 
           <Slider
             value={[maxDays]}
             onValueChange={handleSliderChange}
-            max={7}
+            max={5}
             min={1}
             step={1}
             className="w-full"
           />
           <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>1 day</span>
-            <span>7 days</span>
+            <span>5 days</span>
           </div>
         </div>
       </div>
