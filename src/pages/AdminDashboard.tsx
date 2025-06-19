@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockUsers, mockSubjects, mockSections, mockClasses, mockLecturers, mockVenues } from "@/data/mockData";
+import { mockUsers, mockSubjects, mockSections, mockClasses, mockLecturers, mockVenues, getSectionById, getSubjectById, getLecturerById, getVenueById } from "@/data/mockData";
 import { Users, BookOpen, Calendar, MapPin, Clock, User } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -87,17 +87,17 @@ const AdminDashboard = () => {
                 </TableHeader>
                 <TableBody>
                   {mockClasses.slice(0, 10).map((classItem) => {
-                    const section = mockSections.find(s => s.id === classItem.sectionId);
-                    const subject = mockSubjects.find(s => s.id === section?.subjectId);
-                    const lecturer = mockLecturers.find(l => l.id === classItem.lecturerId);
-                    const venue = mockVenues.find(v => v.id === classItem.venueId);
+                    const section = getSectionById(classItem.sectionId);
+                    const subject = section ? getSubjectById(section.subjectId) : undefined;
+                    const lecturer = section ? getLecturerById(section.lecturerId) : undefined;
+                    const venue = getVenueById(classItem.venueId);
                     
                     return (
                       <TableRow key={classItem.id}>
                         <TableCell>{subject?.name}</TableCell>
-                        <TableCell>{section?.name}</TableCell>
+                        <TableCell>Section {section?.sectionNumber}</TableCell>
                         <TableCell>{lecturer?.name}</TableCell>
-                        <TableCell className="capitalize">{classItem.day}</TableCell>
+                        <TableCell className="capitalize">{classItem.dayOfWeek}</TableCell>
                         <TableCell>{classItem.startTime} - {classItem.endTime}</TableCell>
                         <TableCell>{venue?.name}</TableCell>
                       </TableRow>

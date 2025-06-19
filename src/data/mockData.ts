@@ -1,4 +1,3 @@
-
 // Subject -> Section -> Class hierarchy
 export interface Subject {
   id: string;
@@ -44,6 +43,13 @@ export interface Venue {
   floor: number;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'student' | 'admin';
+}
+
 // Mock data
 export const mockSubjects: Subject[] = [
   { id: '1', name: 'Mathematics', code: 'MATH101', description: 'Introduction to Calculus', credits: 3 },
@@ -70,6 +76,14 @@ export const mockVenues: Venue[] = [
   { id: '4', name: 'Computer Lab 2', capacity: 40, type: 'lab', building: 'IT Block', floor: 3 },
   { id: '5', name: 'Lecture Hall B', capacity: 150, type: 'hall', building: 'Academic Block A', floor: 2 },
   { id: '6', name: 'Online', capacity: 1000, type: 'online', building: 'Virtual', floor: 0 },
+];
+
+export const mockUsers: User[] = [
+  { id: '1', name: 'John Doe', email: 'john.doe@student.edu', role: 'student' },
+  { id: '2', name: 'Jane Smith', email: 'jane.smith@student.edu', role: 'student' },
+  { id: '3', name: 'Admin User', email: 'admin@university.edu', role: 'admin' },
+  { id: '4', name: 'Alice Johnson', email: 'alice.johnson@student.edu', role: 'student' },
+  { id: '5', name: 'Bob Wilson', email: 'bob.wilson@student.edu', role: 'student' },
 ];
 
 export const mockSections: Section[] = [
@@ -158,4 +172,23 @@ export const getClassesWithDetails = () => {
       venue: getVenueById(classItem.venueId)
     };
   });
+};
+
+// Add the missing getTimetableEntries function
+export const getTimetableEntries = () => {
+  return mockClasses.map(classItem => {
+    const section = getSectionById(classItem.sectionId);
+    return {
+      id: classItem.id,
+      subject: section ? getSubjectById(section.subjectId) : undefined,
+      lecturer: section ? getLecturerById(section.lecturerId) : undefined,
+      venue: getVenueById(classItem.venueId),
+      dayOfWeek: classItem.dayOfWeek,
+      startTime: classItem.startTime,
+      endTime: classItem.endTime,
+      type: classItem.type,
+      enrolledStudents: section?.enrolledStudents || 0,
+      maxStudents: section?.maxStudents || 0
+    };
+  }).filter(entry => entry.subject && entry.lecturer && entry.venue);
 };
