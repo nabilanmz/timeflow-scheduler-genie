@@ -84,7 +84,7 @@ const MyTimetable = () => {
                             <div className="text-xs text-blue-500">
                               {classData.venue}
                             </div>
-                            <Badge size="sm" className="mt-1 text-xs">
+                            <Badge className="mt-1 text-xs">
                               {classData.type}
                             </Badge>
                           </div>
