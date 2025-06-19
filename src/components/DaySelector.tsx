@@ -6,14 +6,12 @@ interface DaySelectorProps {
   onDaysChange: (days: string[]) => void;
 }
 
-const daysOfWeek = [
+const weekdays = [
   { id: "monday", label: "Monday", short: "Mon" },
   { id: "tuesday", label: "Tuesday", short: "Tue" },
   { id: "wednesday", label: "Wednesday", short: "Wed" },
   { id: "thursday", label: "Thursday", short: "Thu" },
   { id: "friday", label: "Friday", short: "Fri" },
-  { id: "saturday", label: "Saturday", short: "Sat" },
-  { id: "sunday", label: "Sunday", short: "Sun" },
 ];
 
 const DaySelector = ({ selectedDays, onDaysChange }: DaySelectorProps) => {
@@ -25,13 +23,8 @@ const DaySelector = ({ selectedDays, onDaysChange }: DaySelectorProps) => {
     }
   };
 
-  const selectWeekdays = () => {
-    const weekdays = ["monday", "tuesday", "wednesday", "thursday", "friday"];
-    onDaysChange(weekdays);
-  };
-
   const selectAll = () => {
-    onDaysChange(daysOfWeek.map(d => d.id));
+    onDaysChange(weekdays.map(d => d.id));
   };
 
   const clearAll = () => {
@@ -43,16 +36,10 @@ const DaySelector = ({ selectedDays, onDaysChange }: DaySelectorProps) => {
       {/* Quick selection buttons */}
       <div className="flex gap-2 flex-wrap">
         <button
-          onClick={selectWeekdays}
-          className="px-3 py-1 text-sm bg-green-100 hover:bg-green-200 text-green-800 rounded-full transition-colors"
-        >
-          Weekdays Only
-        </button>
-        <button
           onClick={selectAll}
           className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-800 rounded-full transition-colors"
         >
-          All Days
+          All Weekdays
         </button>
         <button
           onClick={clearAll}
@@ -63,8 +50,8 @@ const DaySelector = ({ selectedDays, onDaysChange }: DaySelectorProps) => {
       </div>
 
       {/* Day checkboxes */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-        {daysOfWeek.map((day) => (
+      <div className="grid grid-cols-5 gap-4">
+        {weekdays.map((day) => (
           <div
             key={day.id}
             className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
@@ -82,7 +69,7 @@ const DaySelector = ({ selectedDays, onDaysChange }: DaySelectorProps) => {
               />
               <div className="text-center">
                 <div className="font-medium text-sm">{day.short}</div>
-                <div className="text-xs text-gray-600 hidden md:block">{day.label}</div>
+                <div className="text-xs text-gray-600">{day.label}</div>
               </div>
             </div>
           </div>

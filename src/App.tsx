@@ -8,7 +8,8 @@ import { UserProvider } from "@/contexts/UserContext";
 import Layout from "@/components/Layout";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import BrowseClasses from "./pages/BrowseClasses";
+import BrowseSubjects from "./pages/BrowseSubjects";
+import BrowseSections from "./pages/BrowseSections";
 import MyTimetable from "./pages/MyTimetable";
 import NotFound from "./pages/NotFound";
 
@@ -24,7 +25,8 @@ const App = () => (
           <Layout>
             <Routes>
               <Route path="/" element={<StudentDashboard />} />
-              <Route path="/browse" element={<BrowseClasses />} />
+              <Route path="/browse-subjects" element={<BrowseSubjects />} />
+              <Route path="/browse-sections" element={<BrowseSections />} />
               <Route path="/my-timetable" element={<MyTimetable />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/users" element={<AdminDashboard />} />

@@ -3,7 +3,10 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Plus } from "lucide-react";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { X, ChevronDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SubjectSelectorProps {
   selectedSubjects: string[];
@@ -17,30 +20,24 @@ const commonSubjects = [
 ];
 
 const SubjectSelector = ({ selectedSubjects, onSubjectsChange }: SubjectSelectorProps) => {
-  const [customSubject, setCustomSubject] = useState("");
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
   const addSubject = (subject: string) => {
     if (!selectedSubjects.includes(subject)) {
       onSubjectsChange([...selectedSubjects, subject]);
     }
+    setOpen(false);
   };
 
   const removeSubject = (subject: string) => {
     onSubjectsChange(selectedSubjects.filter(s => s !== subject));
   };
 
-  const addCustomSubject = () => {
-    if (customSubject.trim() && !selectedSubjects.includes(customSubject.trim())) {
-      addSubject(customSubject.trim());
-      setCustomSubject("");
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      addCustomSubject();
-    }
-  };
+  const filteredSubjects = commonSubjects.filter(subject =>
+    subject.toLowerCase().includes(search.toLowerCase()) &&
+    !selectedSubjects.includes(subject)
+  );
 
   return (
     <div className="space-y-4">
@@ -68,43 +65,51 @@ const SubjectSelector = ({ selectedSubjects, onSubjectsChange }: SubjectSelector
         </div>
       )}
 
-      {/* Common subjects */}
+      {/* Subject search and select */}
       <div className="space-y-2">
-        <p className="text-sm font-medium text-gray-700">Choose from common subjects:</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {commonSubjects.map((subject) => (
+        <p className="text-sm font-medium text-gray-700">Search and select subjects:</p>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
             <Button
-              key={subject}
-              variant={selectedSubjects.includes(subject) ? "default" : "outline"}
-              size="sm"
-              onClick={() => selectedSubjects.includes(subject) ? removeSubject(subject) : addSubject(subject)}
-              className="justify-start text-sm h-auto py-2"
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between"
             >
-              {subject}
+              Search subjects...
+              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Custom subject input */}
-      <div className="space-y-2">
-        <p className="text-sm font-medium text-gray-700">Add a custom subject:</p>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Enter subject name..."
-            value={customSubject}
-            onChange={(e) => setCustomSubject(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="flex-1"
-          />
-          <Button
-            onClick={addCustomSubject}
-            disabled={!customSubject.trim()}
-            size="sm"
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0 bg-white">
+            <Command>
+              <CommandInput 
+                placeholder="Search subjects..." 
+                value={search}
+                onValueChange={setSearch}
+              />
+              <CommandList>
+                <CommandEmpty>No subjects found.</CommandEmpty>
+                <CommandGroup>
+                  {filteredSubjects.map((subject) => (
+                    <CommandItem
+                      key={subject}
+                      onSelect={() => addSubject(subject)}
+                      className="cursor-pointer"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedSubjects.includes(subject) ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {subject}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );

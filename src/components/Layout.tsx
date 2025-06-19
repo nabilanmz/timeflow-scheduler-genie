@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/contexts/UserContext';
-import { Calendar, Users, Settings, BookOpen, User, LogOut } from 'lucide-react';
+import { Calendar, Users, Settings, BookOpen, User, Layers } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -16,7 +16,8 @@ const Layout = ({ children }: LayoutProps) => {
 
   const studentNavItems = [
     { path: '/', label: 'Generate Timetable', icon: Calendar },
-    { path: '/browse', label: 'Browse Classes', icon: BookOpen },
+    { path: '/browse-subjects', label: 'Browse Subjects', icon: BookOpen },
+    { path: '/browse-sections', label: 'Browse Sections', icon: Layers },
     { path: '/my-timetable', label: 'My Timetable', icon: Calendar },
   ];
 
