@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,9 @@ import { UserProvider } from "@/contexts/UserContext";
 import Layout from "@/components/Layout";
 import StudentDashboard from "./pages/StudentDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminSubjects from "./pages/AdminSubjects";
+import AdminPeople from "./pages/AdminPeople";
+import AdminRequests from "./pages/AdminRequests";
 import BrowseSubjects from "./pages/BrowseSubjects";
 import BrowseSections from "./pages/BrowseSections";
 import MyTimetable from "./pages/MyTimetable";
@@ -29,9 +31,9 @@ const App = () => (
               <Route path="/browse-sections" element={<BrowseSections />} />
               <Route path="/my-timetable" element={<MyTimetable />} />
               <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/users" element={<AdminDashboard />} />
-              <Route path="/admin/classes" element={<AdminDashboard />} />
-              <Route path="/admin/requests" element={<AdminDashboard />} />
+              <Route path="/admin/subjects" element={<AdminSubjects />} />
+              <Route path="/admin/people" element={<AdminPeople />} />
+              <Route path="/admin/requests" element={<AdminRequests />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Layout>

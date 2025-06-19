@@ -1,4 +1,3 @@
-
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -23,9 +22,9 @@ const Layout = ({ children }: LayoutProps) => {
 
   const adminNavItems = [
     { path: '/admin', label: 'Dashboard', icon: Settings },
-    { path: '/admin/users', label: 'Manage Users', icon: Users },
-    { path: '/admin/classes', label: 'Manage Classes', icon: BookOpen },
-    { path: '/admin/requests', label: 'Change Requests', icon: Calendar },
+    { path: '/admin/subjects', label: 'Academic', icon: BookOpen },
+    { path: '/admin/people', label: 'People', icon: Users },
+    { path: '/admin/requests', label: 'Requests', icon: Calendar },
   ];
 
   const navItems = user?.role === 'admin' ? adminNavItems : studentNavItems;

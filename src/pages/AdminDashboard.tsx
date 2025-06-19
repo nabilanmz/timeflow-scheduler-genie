@@ -1,18 +1,17 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockUsers, mockSubjects, mockSections, mockClasses, mockLecturers, mockVenues, getSectionById, getSubjectById, getLecturerById, getVenueById } from "@/data/mockData";
-import { Users, BookOpen, Calendar, MapPin, Clock, User } from "lucide-react";
+import { mockUsers, mockSubjects, mockClasses, mockVenues, mockTimetableChangeRequests } from "@/data/mockData";
+import { Users, BookOpen, Calendar, MapPin, Clock, AlertCircle } from "lucide-react";
 
 const AdminDashboard = () => {
+  const pendingRequests = mockTimetableChangeRequests.filter(req => req.status === 'pending').length;
+  const students = mockUsers.filter(u => u.role === 'student').length;
+
   return (
     <div className="space-y-6">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">Admin Dashboard</h1>
-        <p className="text-xl text-gray-600">Manage your institution's timetable system</p>
+        <p className="text-xl text-gray-600">Overview of your institution's timetable system</p>
       </div>
 
       {/* Stats Cards */}
@@ -23,7 +22,7 @@ const AdminDashboard = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockUsers.filter(u => u.role === 'student').length}</div>
+            <div className="text-2xl font-bold">{students}</div>
           </CardContent>
         </Card>
 
@@ -58,141 +57,56 @@ const AdminDashboard = () => {
         </Card>
       </div>
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="classes" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="classes">Classes</TabsTrigger>
-          <TabsTrigger value="subjects">Subjects</TabsTrigger>
-          <TabsTrigger value="lecturers">Lecturers</TabsTrigger>
-          <TabsTrigger value="users">Users</TabsTrigger>
-        </TabsList>
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-500" />
+              Pending Requests
+            </CardTitle>
+            <CardDescription>Timetable change requests awaiting review</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-orange-500">{pendingRequests}</div>
+            <p className="text-sm text-gray-600 mt-2">
+              {pendingRequests > 0 ? "Requires immediate attention" : "All caught up!"}
+            </p>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="classes" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Class Management</CardTitle>
-              <CardDescription>View and manage all classes</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Section</TableHead>
-                    <TableHead>Lecturer</TableHead>
-                    <TableHead>Day</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Venue</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockClasses.slice(0, 10).map((classItem) => {
-                    const section = getSectionById(classItem.sectionId);
-                    const subject = section ? getSubjectById(section.subjectId) : undefined;
-                    const lecturer = section ? getLecturerById(section.lecturerId) : undefined;
-                    const venue = getVenueById(classItem.venueId);
-                    
-                    return (
-                      <TableRow key={classItem.id}>
-                        <TableCell>{subject?.name}</TableCell>
-                        <TableCell>Section {section?.sectionNumber}</TableCell>
-                        <TableCell>{lecturer?.name}</TableCell>
-                        <TableCell className="capitalize">{classItem.dayOfWeek}</TableCell>
-                        <TableCell>{classItem.startTime} - {classItem.endTime}</TableCell>
-                        <TableCell>{venue?.name}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="subjects" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Subject Management</CardTitle>
-              <CardDescription>View and manage subjects</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {mockSubjects.map((subject) => (
-                  <div key={subject.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h3 className="font-semibold">{subject.name}</h3>
-                      <p className="text-sm text-gray-600">{subject.code}</p>
-                    </div>
-                    <Badge>{subject.credits} credits</Badge>
-                  </div>
-                ))}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-500" />
+              Recent Activity
+            </CardTitle>
+            <CardDescription>Latest system activities</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-medium">Jane Smith</span> submitted timetable change request
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+              <div className="text-sm text-gray-500">2 hours ago</div>
+            </div>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="lecturers" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Lecturer Management</CardTitle>
-              <CardDescription>View and manage lecturers</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4">
-                {mockLecturers.map((lecturer) => (
-                  <div key={lecturer.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <User className="h-8 w-8 text-gray-400" />
-                      <div>
-                        <h3 className="font-semibold">{lecturer.name}</h3>
-                        <p className="text-sm text-gray-600">{lecturer.department}</p>
-                      </div>
-                    </div>
-                    <Badge variant="outline">{lecturer.email}</Badge>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Management</CardTitle>
-              <CardDescription>View and manage system users</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>{user.name}</TableCell>
-                      <TableCell>{user.email}</TableCell>
-                      <TableCell>
-                        <Badge variant={user.role === 'admin' ? 'destructive' : 'default'}>
-                          {user.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm">Edit</Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-green-500" />
+              System Health
+            </CardTitle>
+            <CardDescription>Overall system status</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-500">Healthy</div>
+            <p className="text-sm text-gray-600 mt-2">All systems operational</p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

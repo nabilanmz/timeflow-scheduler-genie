@@ -50,6 +50,15 @@ export interface User {
   role: 'student' | 'admin';
 }
 
+export interface TimetableChangeRequest {
+  id: string;
+  userId: string;
+  generatedTimetable: string; // JSON string of the generated timetable
+  message?: string;
+  dateTime: string;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
 // Mock data
 export const mockSubjects: Subject[] = [
   { id: '1', name: 'Mathematics', code: 'MATH101', description: 'Introduction to Calculus', credits: 3 },
@@ -126,6 +135,40 @@ export const mockClasses: Class[] = [
   { id: '12', sectionId: '6', dayOfWeek: 'wednesday', startTime: '13:00', endTime: '15:00', venueId: '4', type: 'lab' },
 ];
 
+export const mockTimetableChangeRequests: TimetableChangeRequest[] = [
+  {
+    id: '1',
+    userId: '1',
+    generatedTimetable: JSON.stringify([
+      { subject: 'Mathematics', section: 'A', day: 'Monday', time: '09:00-10:30' },
+      { subject: 'Physics', section: 'A', day: 'Tuesday', time: '10:00-11:30' }
+    ]),
+    message: 'Need to switch to morning classes due to work schedule',
+    dateTime: '2024-01-15T10:30:00Z',
+    status: 'pending'
+  },
+  {
+    id: '2',
+    userId: '2',
+    generatedTimetable: JSON.stringify([
+      { subject: 'Computer Science', section: 'B', day: 'Wednesday', time: '13:00-14:30' },
+      { subject: 'Chemistry', section: 'A', day: 'Friday', time: '09:00-11:00' }
+    ]),
+    dateTime: '2024-01-14T14:45:00Z',
+    status: 'approved'
+  },
+  {
+    id: '3',
+    userId: '4',
+    generatedTimetable: JSON.stringify([
+      { subject: 'Biology', section: 'A', day: 'Thursday', time: '14:00-15:30' }
+    ]),
+    message: 'Conflict with part-time job',
+    dateTime: '2024-01-13T09:15:00Z',
+    status: 'rejected'
+  }
+];
+
 // Helper functions
 export const getSubjectById = (id: string): Subject | undefined => {
   return mockSubjects.find(subject => subject.id === id);
@@ -149,6 +192,21 @@ export const getSectionsBySubject = (subjectId: string): Section[] => {
 
 export const getClassesBySection = (sectionId: string): Class[] => {
   return mockClasses.filter(classItem => classItem.sectionId === sectionId);
+};
+
+export const getTimetableChangeRequestById = (id: string): TimetableChangeRequest | undefined => {
+  return mockTimetableChangeRequests.find(request => request.id === id);
+};
+
+export const getTimetableChangeRequestsWithUserDetails = () => {
+  return mockTimetableChangeRequests.map(request => ({
+    ...request,
+    user: getUserById(request.userId)
+  }));
+};
+
+export const getUserById = (id: string): User | undefined => {
+  return mockUsers.find(user => user.id === id);
 };
 
 // Enhanced data with relationships
