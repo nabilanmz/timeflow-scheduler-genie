@@ -1,17 +1,26 @@
+
 import { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useUser } from '@/contexts/UserContext';
-import { Calendar, Users, Settings, BookOpen, User, Layers } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
+import { Calendar, Users, Settings, BookOpen, User, Layers, LogOut } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const { user, switchRole } = useUser();
+  const { signOut } = useAuth();
+  const { data: profile } = useProfile();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   const studentNavItems = [
     { path: '/', label: 'Generate Timetable', icon: Calendar },
@@ -27,7 +36,7 @@ const Layout = ({ children }: LayoutProps) => {
     { path: '/admin/requests', label: 'Requests', icon: Calendar },
   ];
 
-  const navItems = user?.role === 'admin' ? adminNavItems : studentNavItems;
+  const navItems = profile?.role === 'admin' ? adminNavItems : studentNavItems;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -64,22 +73,23 @@ const Layout = ({ children }: LayoutProps) => {
               </nav>
             </div>
 
-            {/* User info and role switcher */}
+            {/* User info and actions */}
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-gray-600" />
-                <span className="text-sm font-medium">{user?.name}</span>
-                <Badge variant={user?.role === 'admin' ? 'destructive' : 'default'}>
-                  {user?.role}
+                <span className="text-sm font-medium">{profile?.name}</span>
+                <Badge variant={profile?.role === 'admin' ? 'destructive' : profile?.role === 'lecturer' ? 'secondary' : 'default'}>
+                  {profile?.role}
                 </Badge>
               </div>
               
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => switchRole(user?.role === 'admin' ? 'student' : 'admin')}
+                onClick={handleSignOut}
               >
-                Switch to {user?.role === 'admin' ? 'Student' : 'Admin'}
+                <LogOut className="h-4 w-4 mr-2" />
+                Sign Out
               </Button>
             </div>
           </div>

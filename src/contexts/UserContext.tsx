@@ -1,7 +1,8 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useProfile } from '@/hooks/useProfile';
 
-export type UserRole = 'student' | 'admin';
+export type UserRole = 'student' | 'lecturer' | 'admin';
 
 interface User {
   id: string;
@@ -31,18 +32,18 @@ interface UserProviderProps {
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const [user, setUser] = useState<User | null>({
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'student'
-  });
+  const { data: profile } = useProfile();
 
-  const switchRole = (role: UserRole) => {
-    if (user) {
-      setUser({ ...user, role });
-    }
-  };
+  const user = profile ? {
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    role: profile.role as UserRole
+  } : null;
+
+  // Mock functions for compatibility - these won't be used in real auth
+  const setUser = () => {};
+  const switchRole = () => {};
 
   return (
     <UserContext.Provider value={{ user, setUser, switchRole }}>
