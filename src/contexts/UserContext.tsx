@@ -1,22 +1,15 @@
-
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-export type UserRole = 'student' | 'admin';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-}
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import api from '@/lib/api';
+import { User } from '@/types/api';
 
 interface UserContextType {
   user: User | null;
-  setUser: (user: User | null) => void;
-  switchRole: (role: UserRole) => void;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+export const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const useUser = () => {
   const context = useContext(UserContext);
@@ -31,21 +24,51 @@ interface UserProviderProps {
 }
 
 export const UserProvider = ({ children }: UserProviderProps) => {
-  const [user, setUser] = useState<User | null>({
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'student'
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const switchRole = (role: UserRole) => {
-    if (user) {
-      setUser({ ...user, role });
+  useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const { data } = await api.get('/api/user');
+        setUser(data);
+      } catch (error) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkUser();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      await api.post('/api/login', { email, password });
+      const { data } = await api.get('/api/user');
+      setUser(data);
+    } catch (error) {
+      setUser(null);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await api.post('/api/logout');
+      setUser(null);
+    } catch (error) {
+      console.error('Logout failed', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, switchRole }}>
+    <UserContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </UserContext.Provider>
   );

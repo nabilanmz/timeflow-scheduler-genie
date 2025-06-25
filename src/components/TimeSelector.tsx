@@ -1,6 +1,8 @@
-
-import { Input } from "@/components/ui/input";
+import { useEffect, useState } from "react";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import api from "@/lib/api";
+import { TimeSlot } from "@/types/api";
 
 interface TimeSelectorProps {
   startTime: string;
@@ -9,6 +11,25 @@ interface TimeSelectorProps {
 }
 
 const TimeSelector = ({ startTime, endTime, onTimeChange }: TimeSelectorProps) => {
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+
+  useEffect(() => {
+    const fetchTimeSlots = async () => {
+      try {
+        const res = await api.get("/api/timeslots");
+        if (res.data && Array.isArray(res.data)) {
+          setTimeSlots(res.data);
+        } else {
+          setTimeSlots([]);
+        }
+      } catch (error) {
+        console.error("Error fetching time slots:", error);
+        setTimeSlots([]);
+      }
+    };
+    fetchTimeSlots();
+  }, []);
+
   const handleStartTimeChange = (newStartTime: string) => {
     onTimeChange(newStartTime, endTime);
   };
@@ -34,11 +55,10 @@ const TimeSelector = ({ startTime, endTime, onTimeChange }: TimeSelectorProps) =
             <button
               key={preset.label}
               onClick={() => onTimeChange(preset.start, preset.end)}
-              className={`p-3 text-left border rounded-lg transition-all duration-200 ${
-                startTime === preset.start && endTime === preset.end
-                  ? "border-purple-500 bg-purple-50"
-                  : "border-gray-200 hover:border-purple-300 hover:bg-purple-25"
-              }`}
+              className={`p-3 text-left border rounded-lg transition-all duration-200 ${startTime === preset.start && endTime === preset.end
+                ? "border-purple-500 bg-purple-50"
+                : "border-gray-200 hover:border-purple-300 hover:bg-purple-25"
+                }`}
             >
               <div className="font-medium text-sm">{preset.label}</div>
               <div className="text-xs text-gray-600">{preset.start} - {preset.end}</div>
@@ -53,25 +73,35 @@ const TimeSelector = ({ startTime, endTime, onTimeChange }: TimeSelectorProps) =
           <Label htmlFor="startTime" className="text-sm font-medium">
             Start Time
           </Label>
-          <Input
-            id="startTime"
-            type="time"
-            value={startTime}
-            onChange={(e) => handleStartTimeChange(e.target.value)}
-            className="w-full"
-          />
+          <Select value={startTime} onValueChange={handleStartTimeChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select start time" />
+            </SelectTrigger>
+            <SelectContent>
+              {timeSlots.map(slot => (
+                <SelectItem key={`start-${slot.id}`} value={slot.start_time.substring(0, 5)}>
+                  {slot.start_time.substring(0, 5)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label htmlFor="endTime" className="text-sm font-medium">
             End Time
           </Label>
-          <Input
-            id="endTime"
-            type="time"
-            value={endTime}
-            onChange={(e) => handleEndTimeChange(e.target.value)}
-            className="w-full"
-          />
+          <Select value={endTime} onValueChange={handleEndTimeChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select end time" />
+            </SelectTrigger>
+            <SelectContent>
+              {timeSlots.map(slot => (
+                <SelectItem key={`end-${slot.id}`} value={slot.end_time.substring(0, 5)}>
+                  {slot.end_time.substring(0, 5)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -97,18 +127,16 @@ const TimeSelector = ({ startTime, endTime, onTimeChange }: TimeSelectorProps) =
 const calculateDuration = (start: string, end: string): string => {
   const [startHour, startMinute] = start.split(':').map(Number);
   const [endHour, endMinute] = end.split(':').map(Number);
-  
-  const startTotalMinutes = startHour * 60 + startMinute;
-  const endTotalMinutes = endHour * 60 + endMinute;
-  
-  const durationMinutes = endTotalMinutes - startTotalMinutes;
-  const hours = Math.floor(durationMinutes / 60);
-  const minutes = durationMinutes % 60;
-  
-  if (minutes === 0) {
-    return `${hours}`;
-  }
-  return `${hours}.${minutes < 10 ? '0' : ''}${Math.round(minutes * 100 / 60)}`;
+
+  const startDate = new Date(0, 0, 0, startHour, startMinute);
+  const endDate = new Date(0, 0, 0, endHour, endMinute);
+
+  let diff = endDate.getTime() - startDate.getTime();
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  diff -= hours * (1000 * 60 * 60);
+  const minutes = Math.floor(diff / (1000 * 60));
+
+  return `${hours}.${minutes === 30 ? '5' : '0'}`;
 };
 
 export default TimeSelector;

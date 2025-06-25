@@ -1,20 +1,26 @@
 import { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/contexts/UserContext';
-import { Calendar, Users, Settings, BookOpen, User, Layers } from 'lucide-react';
+import { Calendar, Users, Settings, BookOpen, User, Layers, LogOut } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 const Layout = ({ children }: LayoutProps) => {
-  const { user, switchRole } = useUser();
+  const { user, logout } = useUser();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   const studentNavItems = [
-    { path: '/', label: 'Generate Timetable', icon: Calendar },
+    { path: '/', label: 'Dashboard', icon: Calendar },
     { path: '/browse-subjects', label: 'Browse Subjects', icon: BookOpen },
     { path: '/browse-sections', label: 'Browse Sections', icon: Layers },
     { path: '/my-timetable', label: 'My Timetable', icon: Calendar },
@@ -39,22 +45,21 @@ const Layout = ({ children }: LayoutProps) => {
               <Link to="/" className="text-2xl font-bold text-gray-900">
                 Smart Timetable
               </Link>
-              
+
               {/* Navigation */}
               <nav className="hidden md:flex items-center gap-1">
                 {navItems.map((item) => {
                   const isActive = location.pathname === item.path;
                   const Icon = item.icon;
-                  
+
                   return (
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isActive
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive
                           ? 'bg-blue-100 text-blue-700'
                           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                      }`}
+                        }`}
                     >
                       <Icon className="h-4 w-4" />
                       {item.label}
@@ -64,23 +69,27 @@ const Layout = ({ children }: LayoutProps) => {
               </nav>
             </div>
 
-            {/* User info and role switcher */}
+            {/* User info and logout button */}
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-gray-600" />
-                <span className="text-sm font-medium">{user?.name}</span>
-                <Badge variant={user?.role === 'admin' ? 'destructive' : 'default'}>
-                  {user?.role}
-                </Badge>
-              </div>
-              
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => switchRole(user?.role === 'admin' ? 'student' : 'admin')}
-              >
-                Switch to {user?.role === 'admin' ? 'Student' : 'Admin'}
-              </Button>
+              {user ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium">{user?.name}</span>
+                    <Badge variant={user?.role === 'admin' ? 'destructive' : 'default'}>
+                      {user?.role}
+                    </Badge>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <Button asChild>
+                  <Link to="/login">Login</Link>
+                </Button>
+              )}
             </div>
           </div>
         </div>

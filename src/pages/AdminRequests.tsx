@@ -15,10 +15,36 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { mockTimetableChangeRequests, getUserById } from "@/data/mockData";
-import { Calendar, Clock, MessageSquare } from "lucide-react";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+import { TimetableChangeRequest } from "@/types/api";
 
 const AdminRequests = () => {
+    const [requests, setRequests] = useState<TimetableChangeRequest[]>([]);
+
+    useEffect(() => {
+        const fetchRequests = async () => {
+            try {
+                const res = await api.get("/timetable-change-requests");
+                setRequests(res.data);
+            } catch (error) {
+                console.error("Error fetching requests:", error);
+            }
+        };
+        fetchRequests();
+    }, []);
+
+    const handleRequestUpdate = async (id: number, status: string) => {
+        try {
+            await api.put(`/timetable-change-requests/${id}`, { status });
+            setRequests(
+                requests.map((r) => (r.id === id ? { ...r, status } : r))
+            );
+        } catch (error) {
+            console.error("Error updating request:", error);
+        }
+    };
+
     const formatDateTime = (dateTime: string) => {
         return (
             new Date(dateTime).toLocaleDateString() +
@@ -63,7 +89,6 @@ const AdminRequests = () => {
                         <TableHeader>
                             <TableRow>
                                 <TableHead>Student</TableHead>
-                                <TableHead>Generated Timetable</TableHead>
                                 <TableHead>Message</TableHead>
                                 <TableHead>Date/Time</TableHead>
                                 <TableHead>Status</TableHead>
@@ -71,111 +96,53 @@ const AdminRequests = () => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {mockTimetableChangeRequests.map((request) => {
-                                const user = getUserById(request.userId);
-                                const timetable = JSON.parse(
-                                    request.generatedTimetable
-                                );
-
-                                return (
-                                    <TableRow key={request.id}>
-                                        <TableCell className="font-medium">
-                                            {user?.name}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="space-y-1">
-                                                {timetable
-                                                    .slice(0, 2)
-                                                    .map(
-                                                        (
-                                                            item: any,
-                                                            index: number
-                                                        ) => (
-                                                            <div
-                                                                key={index}
-                                                                className="text-sm text-gray-600"
-                                                            >
-                                                                {item.subject} (
-                                                                {item.section})
-                                                                - {item.day}{" "}
-                                                                {item.time}
-                                                            </div>
-                                                        )
-                                                    )}
-                                                {timetable.length > 2 && (
-                                                    <div className="text-xs text-gray-500">
-                                                        +{timetable.length - 2}{" "}
-                                                        more classes
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            {request.message ? (
-                                                <div className="flex items-center gap-1">
-                                                    <MessageSquare className="h-4 w-4 text-gray-400" />
-                                                    <span className="text-sm truncate max-w-[200px]">
-                                                        {request.message}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-400 text-sm">
-                                                    No message
-                                                </span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex items-center gap-1">
-                                                <Clock className="h-4 w-4 text-gray-400" />
-                                                <span className="text-sm">
-                                                    {formatDateTime(
-                                                        request.dateTime
-                                                    )}
-                                                </span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                variant={getStatusVariant(
-                                                    request.status
-                                                )}
-                                                className="capitalize"
-                                            >
-                                                {request.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
+                            {requests.map((request) => (
+                                <TableRow key={request.id}>
+                                    <TableCell className="font-medium">
+                                        {request.user.name}
+                                    </TableCell>
+                                    <TableCell>{request.message}</TableCell>
+                                    <TableCell>
+                                        {formatDateTime(request.created_at)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge
+                                            variant={getStatusVariant(request.status)}
+                                        >
+                                            {request.status}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        {request.status === "pending" && (
                                             <div className="flex gap-2">
-                                                {request.status ===
-                                                    "pending" && (
-                                                    <>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="text-green-600 border-green-600"
-                                                        >
-                                                            Approve
-                                                        </Button>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            className="text-red-600 border-red-600"
-                                                        >
-                                                            Reject
-                                                        </Button>
-                                                    </>
-                                                )}
                                                 <Button
-                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        handleRequestUpdate(
+                                                            request.id,
+                                                            "approved"
+                                                        )
+                                                    }
                                                     size="sm"
                                                 >
-                                                    View Details
+                                                    Approve
+                                                </Button>
+                                                <Button
+                                                    onClick={() =>
+                                                        handleRequestUpdate(
+                                                            request.id,
+                                                            "rejected"
+                                                        )
+                                                    }
+                                                    variant="destructive"
+                                                    size="sm"
+                                                >
+                                                    Reject
                                                 </Button>
                                             </div>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
+                                        )}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
                         </TableBody>
                     </Table>
                 </CardContent>

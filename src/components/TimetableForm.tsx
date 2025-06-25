@@ -1,36 +1,35 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Calendar, Clock, Users, BookOpen, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 import SubjectSelector from "./SubjectSelector";
 import DaySelector from "./DaySelector";
 import TimeSelector from "./TimeSelector";
 import LecturerSelector from "./LecturerSelector";
 import MaxDaysSelector from "./MaxDaysSelector";
+import api from "@/lib/api";
 
 export interface TimetablePreferences {
-  subjects: string[];
-  days: string[];
-  startTime: string;
-  endTime: string;
-  lecturers: string[];
-  maxDaysPerWeek: number;
+  subjects: number[];
+  days: number[];
+  start_time: string;
+  end_time: string;
+  lecturers: number[];
+  max_days_per_week: number;
 }
 
 const TimetableForm = () => {
   const [preferences, setPreferences] = useState<TimetablePreferences>({
     subjects: [],
     days: [],
-    startTime: "09:00",
-    endTime: "17:00",
+    start_time: "09:00",
+    end_time: "17:00",
     lecturers: [],
-    maxDaysPerWeek: 5,
+    max_days_per_week: 5,
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validation
     if (preferences.subjects.length === 0) {
       toast({
@@ -39,7 +38,7 @@ const TimetableForm = () => {
       });
       return;
     }
-    
+
     if (preferences.days.length === 0) {
       toast({
         title: "Please select at least one day",
@@ -56,16 +55,20 @@ const TimetableForm = () => {
       return;
     }
 
-    // Success message with preferences summary
-    toast({
-      title: "Timetable preferences submitted!",
-      description: "Your preferences have been saved and are ready for the algorithm.",
-    });
-
-    console.log("Timetable Preferences:", preferences);
-    
-    // Here you would typically send the data to your Python backend
-    // For now, we'll just log it to show the structure
+    try {
+      await api.post("/api/timetable-preferences", { preferences });
+      toast({
+        title: "Timetable preferences submitted!",
+        description: "Your preferences have been saved and are ready for the algorithm.",
+      });
+    } catch (error) {
+      console.error("Error submitting preferences:", error);
+      toast({
+        title: "Error submitting preferences",
+        description: "Could not save your preferences. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const updatePreferences = (key: keyof TimetablePreferences, value: any) => {
@@ -91,7 +94,6 @@ const TimetableForm = () => {
           {/* Subjects Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-blue-600" />
               <h3 className="text-lg font-semibold">Preferred Subjects</h3>
             </div>
             <SubjectSelector
@@ -103,7 +105,6 @@ const TimetableForm = () => {
           {/* Days Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-green-600" />
               <h3 className="text-lg font-semibold">Available Days</h3>
             </div>
             <DaySelector
@@ -115,15 +116,14 @@ const TimetableForm = () => {
           {/* Time Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-purple-600" />
               <h3 className="text-lg font-semibold">Time Preferences</h3>
             </div>
             <TimeSelector
-              startTime={preferences.startTime}
-              endTime={preferences.endTime}
+              startTime={preferences.start_time}
+              endTime={preferences.end_time}
               onTimeChange={(startTime, endTime) => {
-                updatePreferences('startTime', startTime);
-                updatePreferences('endTime', endTime);
+                updatePreferences('start_time', startTime);
+                updatePreferences('end_time', endTime);
               }}
             />
           </div>
@@ -131,7 +131,6 @@ const TimetableForm = () => {
           {/* Lecturers Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-orange-600" />
               <h3 className="text-lg font-semibold">Preferred Lecturers</h3>
             </div>
             <LecturerSelector
@@ -143,8 +142,8 @@ const TimetableForm = () => {
           {/* Max Days Section */}
           <div className="space-y-4">
             <MaxDaysSelector
-              maxDays={preferences.maxDaysPerWeek}
-              onMaxDaysChange={(maxDays) => updatePreferences('maxDaysPerWeek', maxDays)}
+              maxDays={preferences.max_days_per_week}
+              onMaxDaysChange={(maxDays) => updatePreferences('max_days_per_week', maxDays)}
             />
           </div>
 
@@ -159,20 +158,20 @@ const TimetableForm = () => {
                 <span className="font-medium">Days:</span> {preferences.days.length} selected
               </div>
               <div>
-                <span className="font-medium">Time:</span> {preferences.startTime} - {preferences.endTime}
+                <span className="font-medium">Time:</span> {preferences.start_time} - {preferences.end_time}
               </div>
               <div>
                 <span className="font-medium">Lecturers:</span> {preferences.lecturers.length} selected
               </div>
               <div className="md:col-span-2">
-                <span className="font-medium">Max days per week:</span> {preferences.maxDaysPerWeek}
+                <span className="font-medium">Max days per week:</span> {preferences.max_days_per_week}
               </div>
             </div>
           </div>
 
           {/* Submit Button */}
           <div className="text-center pt-4">
-            <Button 
+            <Button
               onClick={handleSubmit}
               size="lg"
               className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"

@@ -1,14 +1,34 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockLecturers, mockUsers } from "@/data/mockData";
-import { User, Users } from "lucide-react";
+import { User as UserIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+import { Lecturer, User } from "@/types/api";
 
 const AdminPeople = () => {
-  const students = mockUsers.filter(user => user.role === 'student');
+  const [lecturers, setLecturers] = useState<Lecturer[]>([]);
+  const [students, setStudents] = useState<User[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [lecturersRes, usersRes] = await Promise.all([
+          api.get("/api/lecturers"),
+          api.get("/users"),
+        ]);
+        setLecturers(lecturersres.data);
+        setStudents(usersres.data.filter((user: User) => !user.is_admin));
+      } catch (error) {
+        console.error("Error fetching people data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
 
   return (
     <div className="space-y-6">
@@ -31,10 +51,10 @@ const AdminPeople = () => {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                {mockLecturers.map((lecturer) => (
+                {lecturers.map((lecturer) => (
                   <div key={lecturer.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-3">
-                      <User className="h-8 w-8 text-gray-400" />
+                      <UserIcon className="h-8 w-8 text-gray-400" />
                       <div>
                         <h3 className="font-semibold">{lecturer.name}</h3>
                         <p className="text-sm text-gray-600">{lecturer.department}</p>
@@ -42,7 +62,6 @@ const AdminPeople = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline">{lecturer.title}</Badge>
                       <Button variant="outline" size="sm">Edit</Button>
                     </div>
                   </div>
@@ -72,7 +91,7 @@ const AdminPeople = () => {
                   {students.map((student) => (
                     <TableRow key={student.id}>
                       <TableCell className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-400" />
+                        <UserIcon className="h-4 w-4 text-gray-400" />
                         {student.name}
                       </TableCell>
                       <TableCell>{student.email}</TableCell>

@@ -1,11 +1,39 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { mockUsers, mockSubjects, mockClasses, mockVenues, mockTimetableChangeRequests } from "@/data/mockData";
-import { Users, BookOpen, Calendar, MapPin, Clock, AlertCircle } from "lucide-react";
+import { Users, BookOpen, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+import { User } from "@/types/api";
 
 const AdminDashboard = () => {
-  const pendingRequests = mockTimetableChangeRequests.filter(req => req.status === 'pending').length;
-  const students = mockUsers.filter(u => u.role === 'student').length;
+  const [stats, setStats] = useState({
+    students: 0,
+    subjects: 0,
+    pendingRequests: 0,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [usersRes, subjectsRes, requestsRes] = await Promise.all([
+          api.get("/api/users"),
+          api.get("/api/subjects"),
+          api.get("/api/timetable-change-requests?status=pending"),
+        ]);
+
+        const students = usersRes.data.filter((u: User) => !u.is_admin).length;
+
+        setStats({
+          students: students,
+          subjects: subjectsRes.data.length,
+          pendingRequests: requestsRes.data.length,
+        });
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -15,14 +43,14 @@ const AdminDashboard = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Students</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{students}</div>
+            <div className="text-2xl font-bold">{stats.students}</div>
           </CardContent>
         </Card>
 
@@ -32,27 +60,17 @@ const AdminDashboard = () => {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockSubjects.length}</div>
+            <div className="text-2xl font-bold">{stats.subjects}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Classes</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
+            <AlertCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{mockClasses.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Venues</CardTitle>
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{mockVenues.length}</div>
+            <div className="text-2xl font-bold">{stats.pendingRequests}</div>
           </CardContent>
         </Card>
       </div>
@@ -65,45 +83,39 @@ const AdminDashboard = () => {
               <AlertCircle className="h-5 w-5 text-orange-500" />
               Pending Requests
             </CardTitle>
-            <CardDescription>Timetable change requests awaiting review</CardDescription>
+            <CardDescription>Review and approve timetable change requests</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-orange-500">{pendingRequests}</div>
-            <p className="text-sm text-gray-600 mt-2">
-              {pendingRequests > 0 ? "Requires immediate attention" : "All caught up!"}
-            </p>
+            <div className="text-3xl font-bold">{stats.pendingRequests}</div>
+            <p className="text-sm text-gray-500">requests awaiting your review</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-500" />
-              Recent Activity
+              <BookOpen className="h-5 w-5 text-blue-500" />
+              Manage Subjects
             </CardTitle>
-            <CardDescription>Latest system activities</CardDescription>
+            <CardDescription>Add, edit, or remove subjects from the curriculum</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              <div className="text-sm">
-                <span className="font-medium">Jane Smith</span> submitted timetable change request
-              </div>
-              <div className="text-sm text-gray-500">2 hours ago</div>
-            </div>
+            <div className="text-3xl font-bold">{stats.subjects}</div>
+            <p className="text-sm text-gray-500">subjects currently in the system</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-green-500" />
-              System Health
+              <Users className="h-5 w-5 text-green-500" />
+              Manage People
             </CardTitle>
-            <CardDescription>Overall system status</CardDescription>
+            <CardDescription>Manage student and lecturer accounts</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-500">Healthy</div>
-            <p className="text-sm text-gray-600 mt-2">All systems operational</p>
+            <div className="text-3xl font-bold">{stats.students}</div>
+            <p className="text-sm text-gray-500">active students</p>
           </CardContent>
         </Card>
       </div>

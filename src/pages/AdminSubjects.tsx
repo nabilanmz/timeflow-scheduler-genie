@@ -1,13 +1,29 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockSubjects, mockSections, mockVenues, getSectionsBySubject, getSubjectById, getLecturerById } from "@/data/mockData";
-import { BookOpen, MapPin, Layers } from "lucide-react";
+import { BookOpen } from "lucide-react";
+import { useEffect, useState } from "react";
+import api from "@/lib/api";
+import { Subject } from "@/types/api";
 
 const AdminSubjects = () => {
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      try {
+        const res = await api.get("/api/subjects");
+        setSubjects(res.data);
+      } catch (error) {
+        console.error("Error fetching subjects:", error);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -30,7 +46,7 @@ const AdminSubjects = () => {
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                {mockSubjects.map((subject) => (
+                {subjects.map((subject) => (
                   <div key={subject.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center gap-3">
                       <BookOpen className="h-8 w-8 text-gray-400" />
@@ -40,7 +56,6 @@ const AdminSubjects = () => {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge>{subject.credits} credits</Badge>
                       <Button variant="outline" size="sm">Edit</Button>
                     </div>
                   </div>
@@ -57,39 +72,7 @@ const AdminSubjects = () => {
               <CardDescription>View and manage sections for all subjects</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Section</TableHead>
-                    <TableHead>Lecturer</TableHead>
-                    <TableHead>Enrollment</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockSections.map((section) => {
-                    const subject = getSubjectById(section.subjectId);
-                    const lecturer = getLecturerById(section.lecturerId);
-                    
-                    return (
-                      <TableRow key={section.id}>
-                        <TableCell>{subject?.name}</TableCell>
-                        <TableCell>Section {section.sectionNumber}</TableCell>
-                        <TableCell>{lecturer?.name}</TableCell>
-                        <TableCell>
-                          <Badge variant={section.enrolledStudents >= section.maxStudents ? "destructive" : "default"}>
-                            {section.enrolledStudents}/{section.maxStudents}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm">Edit</Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+              <p>Sections management is not available yet.</p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -101,26 +84,7 @@ const AdminSubjects = () => {
               <CardDescription>View and manage all venues</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4">
-                {mockVenues.map((venue) => (
-                  <div key={venue.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-8 w-8 text-gray-400" />
-                      <div>
-                        <h3 className="font-semibold">{venue.name}</h3>
-                        <p className="text-sm text-gray-600">
-                          {venue.building}, Floor {venue.floor}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{venue.type}</Badge>
-                      <Badge>{venue.capacity} seats</Badge>
-                      <Button variant="outline" size="sm">Edit</Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <p>Venues management is not available yet.</p>
             </CardContent>
           </Card>
         </TabsContent>
