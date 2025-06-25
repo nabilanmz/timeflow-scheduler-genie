@@ -16,7 +16,7 @@ const BrowseSections = () => {
   useEffect(() => {
     const fetchSections = async () => {
       try {
-        const response = await api.get<{ data: Section[] }>('/sections?include=subject,lecturer,timetableEntries.day,timetableEntries.timeSlot');
+        const response = await api.get<{ data: Section[] }>('/api/sections');
         setSections(response.data);
       } catch (err) {
         setError("Failed to fetch sections. Please try again later.");

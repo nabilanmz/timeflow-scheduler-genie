@@ -8,20 +8,23 @@ import DaySelector from "./DaySelector";
 import TimeSelector from "./TimeSelector";
 import LecturerSelector from "./LecturerSelector";
 import MaxDaysSelector from "./MaxDaysSelector";
+import SectionSelector from "./SectionSelector";
 import api from "@/lib/api";
 
 export interface TimetablePreferences {
-  subjects: number[];
+  subjects: string[];
+  sections: string[];
   days: number[];
   start_time: string;
   end_time: string;
-  lecturers: number[];
+  lecturers: string[];
   max_days_per_week: number;
 }
 
 const TimetableForm = () => {
   const [preferences, setPreferences] = useState<TimetablePreferences>({
     subjects: [],
+    sections: [],
     days: [],
     start_time: "09:00",
     end_time: "17:00",
@@ -55,6 +58,14 @@ const TimetableForm = () => {
       return;
     }
 
+    if (preferences.sections.length === 0) {
+      toast({
+        title: "Please select at least one section",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await api.post("/api/timetable-preferences", { preferences });
       toast({
@@ -78,6 +89,14 @@ const TimetableForm = () => {
     }));
   };
 
+  const handleSubjectsChange = (subjects: string[]) => {
+    setPreferences(prev => ({
+      ...prev,
+      subjects,
+      sections: [], // Reset sections when subjects change
+    }));
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
@@ -98,7 +117,19 @@ const TimetableForm = () => {
             </div>
             <SubjectSelector
               selectedSubjects={preferences.subjects}
-              onSubjectsChange={(subjects) => updatePreferences('subjects', subjects)}
+              onSubjectsChange={handleSubjectsChange}
+            />
+          </div>
+
+          {/* Sections Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">Preferred Sections</h3>
+            </div>
+            <SectionSelector
+              selectedSections={preferences.sections}
+              onSectionsChange={(sections) => updatePreferences('sections', sections)}
+              selectedSubjects={preferences.subjects}
             />
           </div>
 
@@ -153,6 +184,9 @@ const TimetableForm = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="font-medium">Subjects:</span> {preferences.subjects.length} selected
+              </div>
+              <div>
+                <span className="font-medium">Sections:</span> {preferences.sections.length} selected
               </div>
               <div>
                 <span className="font-medium">Days:</span> {preferences.days.length} selected
