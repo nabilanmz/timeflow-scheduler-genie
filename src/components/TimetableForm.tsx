@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
-import { Settings } from "lucide-react";
+import { Settings, Loader2 } from "lucide-react";
 import SubjectSelector from "./SubjectSelector";
 import DaySelector from "./DaySelector";
 import TimeSelector from "./TimeSelector";
@@ -10,6 +10,8 @@ import LecturerSelector from "./LecturerSelector";
 import MaxDaysSelector from "./MaxDaysSelector";
 import SectionSelector from "./SectionSelector";
 import api from "@/lib/api";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 export interface TimetablePreferences {
   subjects: string[];
@@ -19,6 +21,14 @@ export interface TimetablePreferences {
   end_time: string;
   lecturers: string[];
   max_days_per_week: number;
+  schedule_style: 'compact' | 'spaced_out';
+}
+
+export interface AvailableOptions {
+  days: { id: number; name: string }[];
+  time_slots: { start_time: string; end_time: string }[];
+  lecturers: { id: string; name: string }[];
+  sections: { id: string; name: string }[];
 }
 
 const TimetableForm = () => {
@@ -30,7 +40,55 @@ const TimetableForm = () => {
     end_time: "17:00",
     lecturers: [],
     max_days_per_week: 5,
+    schedule_style: 'compact',
   });
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [availableOptions, setAvailableOptions] = useState<AvailableOptions | null>(null);
+  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      if (preferences.subjects.length > 0) {
+        setIsLoadingOptions(true);
+        try {
+          const response = await api.get("/api/timetable-preferences/options", {
+            params: {
+              subjects: preferences.subjects,
+            },
+          });
+          setAvailableOptions(response.data);
+
+          // Filter out preferences that are no longer available
+          setPreferences(prev => ({
+            ...prev,
+            sections: prev.sections.filter(sectionId =>
+              response.data.sections.some((s: any) => s.id === sectionId)
+            ),
+            lecturers: prev.lecturers.filter(lecturerId =>
+              response.data.lecturers.some((l: any) => l.id === lecturerId)
+            ),
+            days: prev.days.filter(dayId =>
+              response.data.days.some((d: any) => d.id === dayId)
+            ),
+          }));
+
+        } catch (error) {
+          console.error("Error fetching timetable options:", error);
+          toast({
+            title: "Error",
+            description: "Could not fetch options for the selected subjects.",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoadingOptions(false);
+        }
+      } else {
+        setAvailableOptions(null);
+      }
+    };
+
+    fetchOptions();
+  }, [preferences.subjects]);
 
   const handleSubmit = async () => {
     // Validation
@@ -66,19 +124,31 @@ const TimetableForm = () => {
       return;
     }
 
+    setIsGenerating(true);
     try {
+      // First, save the preferences
       await api.post("/api/timetable-preferences", { preferences });
       toast({
-        title: "Timetable preferences submitted!",
-        description: "Your preferences have been saved and are ready for the algorithm.",
+        title: "Preferences saved!",
+        description: "Your preferences have been saved successfully.",
       });
-    } catch (error) {
-      console.error("Error submitting preferences:", error);
+
+      // Then, trigger the generation
+      await api.post("/api/generate-timetable", { preferences });
       toast({
-        title: "Error submitting preferences",
-        description: "Could not save your preferences. Please try again.",
+        title: "Timetable generation started!",
+        description: "Your new timetable is being generated. You will be notified when it's ready.",
+      });
+
+    } catch (error) {
+      console.error("Error during timetable generation process:", error);
+      toast({
+        title: "An error occurred",
+        description: "Could not complete the timetable request. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -94,6 +164,7 @@ const TimetableForm = () => {
       ...prev,
       subjects,
       sections: [], // Reset sections when subjects change
+      lecturers: [], // Also reset lecturers
     }));
   };
 
@@ -130,6 +201,8 @@ const TimetableForm = () => {
               selectedSections={preferences.sections}
               onSectionsChange={(sections) => updatePreferences('sections', sections)}
               selectedSubjects={preferences.subjects}
+              availableSections={availableOptions?.sections}
+              disabled={preferences.subjects.length === 0 || isLoadingOptions}
             />
           </div>
 
@@ -141,6 +214,8 @@ const TimetableForm = () => {
             <DaySelector
               selectedDays={preferences.days}
               onDaysChange={(days) => updatePreferences('days', days)}
+              availableDays={availableOptions?.days}
+              disabled={isLoadingOptions}
             />
           </div>
 
@@ -156,6 +231,8 @@ const TimetableForm = () => {
                 updatePreferences('start_time', startTime);
                 updatePreferences('end_time', endTime);
               }}
+              availableTimeSlots={availableOptions?.time_slots}
+              disabled={isLoadingOptions}
             />
           </div>
 
@@ -167,7 +244,35 @@ const TimetableForm = () => {
             <LecturerSelector
               selectedLecturers={preferences.lecturers}
               onLecturersChange={(lecturers) => updatePreferences('lecturers', lecturers)}
+              availableLecturers={availableOptions?.lecturers}
+              disabled={preferences.subjects.length === 0 || isLoadingOptions}
             />
+          </div>
+
+          {/* Schedule Style Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">Schedule Style</h3>
+            </div>
+            <RadioGroup
+              value={preferences.schedule_style}
+              onValueChange={(value: 'compact' | 'spaced_out') =>
+                updatePreferences('schedule_style', value)
+              }
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="compact" id="r1" />
+                <Label htmlFor="r1">Compact</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="spaced_out" id="r2" />
+                <Label htmlFor="r2">Spaced Out</Label>
+              </div>
+            </RadioGroup>
+            <p className="text-sm text-gray-500">
+              Compact schedules prioritize fewer days, while spaced out schedules distribute classes more evenly.
+            </p>
           </div>
 
           {/* Max Days Section */}
@@ -200,6 +305,9 @@ const TimetableForm = () => {
               <div className="md:col-span-2">
                 <span className="font-medium">Max days per week:</span> {preferences.max_days_per_week}
               </div>
+              <div className="md:col-span-2">
+                <span className="font-medium">Schedule Style:</span> <span className="capitalize">{preferences.schedule_style.replace('_', ' ')}</span>
+              </div>
             </div>
           </div>
 
@@ -207,10 +315,18 @@ const TimetableForm = () => {
           <div className="text-center pt-4">
             <Button
               onClick={handleSubmit}
+              disabled={isGenerating}
               size="lg"
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50"
             >
-              Generate My Timetable
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                'Generate My Timetable'
+              )}
             </Button>
           </div>
         </CardContent>

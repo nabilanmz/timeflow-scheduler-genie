@@ -9,9 +9,11 @@ interface SectionSelectorProps {
     selectedSections: string[];
     onSectionsChange: (sections: string[]) => void;
     selectedSubjects: string[]; // To filter sections by selected subjects
+    availableSections?: Section[];
+    disabled?: boolean;
 }
 
-const SectionSelector = ({ selectedSections, onSectionsChange, selectedSubjects }: SectionSelectorProps) => {
+const SectionSelector = ({ selectedSections, onSectionsChange, selectedSubjects, availableSections, disabled }: SectionSelectorProps) => {
     const [searchTerm, setSearchTerm] = useState("");
     const [allSections, setAllSections] = useState<Section[]>([]);
 
@@ -40,6 +42,7 @@ const SectionSelector = ({ selectedSections, onSectionsChange, selectedSubjects 
         fetchSections();
     }, [selectedSubjects]);
 
+    console.log("Selected subjects:", selectedSubjects);
     const addSection = (sectionId: string) => {
         if (!selectedSections.includes(sectionId)) {
             onSectionsChange([...selectedSections, sectionId]);
@@ -51,12 +54,14 @@ const SectionSelector = ({ selectedSections, onSectionsChange, selectedSubjects 
     };
 
     // Filter sections based on selected subjects first, then by search term
-    const availableSections = allSections.filter(section =>
+    const filteredBySubject = allSections.filter(section =>
         selectedSubjects.includes(section.subject_id.toString())
     );
 
-    const filteredSections = availableSections.filter(section => {
-        console.log("Filtering section:", section);
+    const finalAvailableSections = availableSections || filteredBySubject;
+
+    console.log("Available sections after filtering by subjects:", finalAvailableSections);
+    const filteredSections = finalAvailableSections.filter(section => {
         const subjectName = section.subject?.name.toLowerCase() || '';
         const lecturerName = section.lecturer?.name.toLowerCase() || '';
         const sectionNumber = `section ${section.section_number}`.toLowerCase();
@@ -100,47 +105,36 @@ const SectionSelector = ({ selectedSections, onSectionsChange, selectedSubjects 
                 </div>
             )}
 
-            {/* Search sections */}
+            {/* Search and selection */}
             <div className="space-y-2">
-                <p className="text-sm font-medium text-gray-700">Search and select sections:</p>
                 <Input
-                    placeholder="Search sections by subject, lecturer..."
+                    type="text"
+                    placeholder="Search for sections..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full"
-                    disabled={selectedSubjects.length === 0}
+                    disabled={disabled}
                 />
-                {selectedSubjects.length === 0 && (
-                    <p className="text-xs text-gray-500">Please select subjects first to see available sections.</p>
-                )}
-            </div>
-
-            {/* Available sections */}
-            {selectedSubjects.length > 0 && (
-                <div className="max-h-48 overflow-y-auto space-y-1 border rounded-lg p-2">
-                    {allSections.map((section) => (
-                        <div
-                            key={section.id}
-                            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${selectedSections.includes(section.id.toString())
-                                ? "bg-blue-50 border border-blue-200"
-                                : "hover:bg-gray-50"
-                                }`}
-                            onClick={() => selectedSections.includes(section.id.toString()) ? removeSection(section.id.toString()) : addSection(section.id.toString())}
-                        >
-                            <div className="flex items-center gap-2">
-                                <ListChecks className="h-4 w-4 text-gray-500" />
-                                <span className="text-sm">{section.subject?.name} - Section {section.section_number} ({section.lecturer?.name})</span>
+                <div className="max-h-60 overflow-y-auto border rounded-md p-2 space-y-1">
+                    {filteredSections.length > 0 ? (
+                        filteredSections.map((section) => (
+                            <div
+                                key={section.id}
+                                onClick={() => addSection(section.id.toString())}
+                                className={`p-2 rounded-md cursor-pointer hover:bg-gray-100 ${selectedSections.includes(section.id.toString())
+                                        ? "bg-blue-50 text-blue-800"
+                                        : ""
+                                    }`}
+                            >
+                                <p className="font-medium">{section.subject?.name} - Section {section.section_number}</p>
+                                <p className="text-sm text-gray-500">Lecturer: {section.lecturer?.name}</p>
                             </div>
-                            {selectedSections.includes(section.id.toString()) && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            )}
-                        </div>
-                    ))}
-                    {allSections.length === 0 && (
-                        <p className="text-sm text-gray-500 text-center py-4">No sections found for the selected subjects.</p>
+                        ))
+                    ) : (
+                        <p className="text-center text-gray-500 py-4">No sections available for the selected subjects.</p>
                     )}
                 </div>
-            )}
+            </div>
         </div>
     );
 };

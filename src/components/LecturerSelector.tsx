@@ -6,11 +6,13 @@ import api from "@/lib/api";
 import { Lecturer } from "@/types/api";
 
 interface LecturerSelectorProps {
-  selectedLecturers: number[];
-  onLecturersChange: (lecturers: number[]) => void;
+  selectedLecturers: string[];
+  onLecturersChange: (lecturers: string[]) => void;
+  availableLecturers?: { id: string; name: string }[];
+  disabled?: boolean;
 }
 
-const LecturerSelector = ({ selectedLecturers, onLecturersChange }: LecturerSelectorProps) => {
+const LecturerSelector = ({ selectedLecturers, onLecturersChange, availableLecturers, disabled }: LecturerSelectorProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [allLecturers, setAllLecturers] = useState<Lecturer[]>([]);
 
@@ -30,21 +32,23 @@ const LecturerSelector = ({ selectedLecturers, onLecturersChange }: LecturerSele
     fetchLecturers();
   }, []);
 
-  const addLecturer = (lecturerId: number) => {
+  const addLecturer = (lecturerId: string) => {
     if (!selectedLecturers.includes(lecturerId)) {
       onLecturersChange([...selectedLecturers, lecturerId]);
     }
   };
 
-  const removeLecturer = (lecturerId: number) => {
+  const removeLecturer = (lecturerId: string) => {
     onLecturersChange(selectedLecturers.filter(id => id !== lecturerId));
   };
 
-  const filteredLecturers = allLecturers.filter(lecturer =>
+  const lecturersToShow = availableLecturers || allLecturers;
+
+  const filteredLecturers = lecturersToShow.filter(lecturer =>
     lecturer.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getLecturerById = (id: number) => allLecturers.find(l => l.id === id);
+  const getLecturerById = (id: string) => lecturersToShow.find(l => l.id.toString() === id);
 
   return (
     <div className="space-y-4">
@@ -65,7 +69,7 @@ const LecturerSelector = ({ selectedLecturers, onLecturersChange }: LecturerSele
                   <User className="h-3 w-3 mr-1" />
                   {lecturer.name}
                   <button
-                    onClick={() => removeLecturer(lecturer.id)}
+                    onClick={() => removeLecturer(lecturer.id.toString())}
                     className="ml-2 hover:text-red-600"
                   >
                     <X className="h-3 w-3" />
@@ -85,6 +89,7 @@ const LecturerSelector = ({ selectedLecturers, onLecturersChange }: LecturerSele
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full"
+          disabled={disabled}
         />
       </div>
 
@@ -93,17 +98,21 @@ const LecturerSelector = ({ selectedLecturers, onLecturersChange }: LecturerSele
         {filteredLecturers.map((lecturer) => (
           <div
             key={lecturer.id}
-            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${selectedLecturers.includes(lecturer.id)
-              ? "bg-orange-50 border border-orange-200"
-              : "hover:bg-gray-50"
+            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${selectedLecturers.includes(lecturer.id.toString())
+                ? "bg-orange-50 border border-orange-200"
+                : "hover:bg-gray-50"
               }`}
-            onClick={() => selectedLecturers.includes(lecturer.id) ? removeLecturer(lecturer.id) : addLecturer(lecturer.id)}
+            onClick={() =>
+              selectedLecturers.includes(lecturer.id.toString())
+                ? removeLecturer(lecturer.id.toString())
+                : addLecturer(lecturer.id.toString())
+            }
           >
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-gray-500" />
               <span className="text-sm">{lecturer.name}</span>
             </div>
-            {selectedLecturers.includes(lecturer.id) && (
+            {selectedLecturers.includes(lecturer.id.toString()) && (
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
             )}
           </div>
