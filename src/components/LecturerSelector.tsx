@@ -6,9 +6,9 @@ import api from "@/lib/api";
 import { Lecturer } from "@/types/api";
 
 interface LecturerSelectorProps {
-  selectedLecturers: string[];
-  onLecturersChange: (lecturers: string[]) => void;
-  availableLecturers?: { id: string; name: string }[];
+  selectedLecturers: number[];
+  onLecturersChange: (lecturers: number[]) => void;
+  availableLecturers?: { id: number; name: string }[];
   disabled?: boolean;
 }
 
@@ -32,13 +32,13 @@ const LecturerSelector = ({ selectedLecturers, onLecturersChange, availableLectu
     fetchLecturers();
   }, []);
 
-  const addLecturer = (lecturerId: string) => {
+  const addLecturer = (lecturerId: number) => {
     if (!selectedLecturers.includes(lecturerId)) {
       onLecturersChange([...selectedLecturers, lecturerId]);
     }
   };
 
-  const removeLecturer = (lecturerId: string) => {
+  const removeLecturer = (lecturerId: number) => {
     onLecturersChange(selectedLecturers.filter(id => id !== lecturerId));
   };
 
@@ -48,7 +48,7 @@ const LecturerSelector = ({ selectedLecturers, onLecturersChange, availableLectu
     lecturer.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getLecturerById = (id: string) => lecturersToShow.find(l => l.id.toString() === id);
+  const getLecturerById = (id: number) => lecturersToShow.find(l => l.id === id);
 
   return (
     <div className="space-y-4">
@@ -69,7 +69,7 @@ const LecturerSelector = ({ selectedLecturers, onLecturersChange, availableLectu
                   <User className="h-3 w-3 mr-1" />
                   {lecturer.name}
                   <button
-                    onClick={() => removeLecturer(lecturer.id.toString())}
+                    onClick={() => removeLecturer(lecturer.id)}
                     className="ml-2 hover:text-red-600"
                   >
                     <X className="h-3 w-3" />
@@ -97,22 +97,22 @@ const LecturerSelector = ({ selectedLecturers, onLecturersChange, availableLectu
       <div className="max-h-48 overflow-y-auto space-y-1 border rounded-lg p-2">
         {filteredLecturers.map((lecturer) => (
           <div
-            key={lecturer.id}
-            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${selectedLecturers.includes(lecturer.id.toString())
+            key={lecturer.id}            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
+              selectedLecturers.includes(lecturer.id)
                 ? "bg-orange-50 border border-orange-200"
                 : "hover:bg-gray-50"
-              }`}
+            }`}
             onClick={() =>
-              selectedLecturers.includes(lecturer.id.toString())
-                ? removeLecturer(lecturer.id.toString())
-                : addLecturer(lecturer.id.toString())
+              selectedLecturers.includes(lecturer.id)
+                ? removeLecturer(lecturer.id)
+                : addLecturer(lecturer.id)
             }
           >
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-gray-500" />
               <span className="text-sm">{lecturer.name}</span>
             </div>
-            {selectedLecturers.includes(lecturer.id.toString()) && (
+            {selectedLecturers.includes(lecturer.id) && (
               <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
             )}
           </div>

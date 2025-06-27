@@ -7,87 +7,93 @@ import SubjectSelector from "./SubjectSelector";
 import DaySelector from "./DaySelector";
 import TimeSelector from "./TimeSelector";
 import LecturerSelector from "./LecturerSelector";
-import MaxDaysSelector from "./MaxDaysSelector";
-import SectionSelector from "./SectionSelector";
 import api from "@/lib/api";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { TimeSlot } from "@/types/api";
 
 export interface TimetablePreferences {
-  subjects: string[];
-  sections: string[];
+  subjects: number[];
   days: number[];
   start_time: string;
   end_time: string;
-  lecturers: string[];
-  max_days_per_week: number;
-  schedule_style: 'compact' | 'spaced_out';
+  lecturers: number[];
+  enforce_ties: 'yes' | 'no';
+  mode: 1 | 2; // 1=compact, 2=spaced_out
 }
 
 export interface AvailableOptions {
-  days: { id: number; name: string }[];
-  time_slots: { start_time: string; end_time: string }[];
-  lecturers: { id: string; name: string }[];
-  sections: { id: string; name: string }[];
+  subjects: { id: number; name: string; code: string }[];
+  lecturers: { id: number; name: string }[];
+  timeSlots?: { id: number; start_time: string; end_time: string }[];
 }
 
 const TimetableForm = () => {
   const [preferences, setPreferences] = useState<TimetablePreferences>({
     subjects: [],
-    sections: [],
     days: [],
-    start_time: "09:00",
-    end_time: "17:00",
+    start_time: "08:00",
+    end_time: "18:00",
     lecturers: [],
-    max_days_per_week: 5,
-    schedule_style: 'compact',
+    enforce_ties: 'yes',
+    mode: 1,
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [availableOptions, setAvailableOptions] = useState<AvailableOptions | null>(null);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const [filteredTimeSlots, setFilteredTimeSlots] = useState<TimeSlot[]>([]);
 
   useEffect(() => {
     const fetchOptions = async () => {
-      if (preferences.subjects.length > 0) {
-        setIsLoadingOptions(true);
-        try {
-          const response = await api.get("/api/timetable-preferences/options", {
-            params: {
-              subjects: preferences.subjects,
-            },
-          });
-          setAvailableOptions(response.data);
-
-          // Filter out preferences that are no longer available
-          setPreferences(prev => ({
-            ...prev,
-            sections: prev.sections.filter(sectionId =>
-              response.data.sections.some((s: any) => s.id === sectionId)
-            ),
-            lecturers: prev.lecturers.filter(lecturerId =>
-              response.data.lecturers.some((l: any) => l.id === lecturerId)
-            ),
-            days: prev.days.filter(dayId =>
-              response.data.days.some((d: any) => d.id === dayId)
-            ),
-          }));
-
-        } catch (error) {
-          console.error("Error fetching timetable options:", error);
-          toast({
-            title: "Error",
-            description: "Could not fetch options for the selected subjects.",
-            variant: "destructive",
-          });
-        } finally {
-          setIsLoadingOptions(false);
-        }
-      } else {
-        setAvailableOptions(null);
+      try {
+        const response = await api.get("/api/preference-options");
+        setAvailableOptions(response.data);
+      } catch (error) {
+        console.error("Error fetching preference options:", error);
+        toast({
+          title: "Error",
+          description: "Could not fetch available options.",
+          variant: "destructive",
+        });
       }
     };
 
     fetchOptions();
+  }, []);
+
+  // Filter time slots based on selected subjects
+  useEffect(() => {
+    const fetchSubjectTimeSlots = async () => {
+      if (preferences.subjects.length === 0) {
+        setFilteredTimeSlots([]);
+        return;
+      }
+
+      try {
+        // Fetch available time slots for selected subjects
+        const response = await api.get(`/api/available-timeslots?subject_ids=${preferences.subjects.join(',')}`);
+
+        if (response.data && Array.isArray(response.data)) {
+          setFilteredTimeSlots(response.data);
+        } else {
+          // Fallback to all time slots if no specific data
+          const allSlotsResponse = await api.get("/api/timeslots");
+          setFilteredTimeSlots(allSlotsResponse.data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching subject time slots:", error);
+        // Fallback to all time slots on error
+        try {
+          const allSlotsResponse = await api.get("/api/timeslots");
+          setFilteredTimeSlots(allSlotsResponse.data || []);
+        } catch (fallbackError) {
+          console.error("Error fetching fallback time slots:", fallbackError);
+          setFilteredTimeSlots([]);
+        }
+      }
+    };
+
+    fetchSubjectTimeSlots();
   }, [preferences.subjects]);
 
   const handleSubmit = async () => {
@@ -108,45 +114,70 @@ const TimetableForm = () => {
       return;
     }
 
-    if (preferences.lecturers.length === 0) {
-      toast({
-        title: "Please select at least one lecturer",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (preferences.sections.length === 0) {
-      toast({
-        title: "Please select at least one section",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsGenerating(true);
     try {
-      // First, save the preferences
-      await api.post("/api/timetable-preferences", { preferences });
+      console.log("Sending preferences:", preferences);
+
+      // Ensure time format is HH:MM (remove seconds if present)
+      const formattedPreferences = {
+        ...preferences,
+        start_time: preferences.start_time.substring(0, 5),
+        end_time: preferences.end_time.substring(0, 5),
+      };
+
+      // Generate timetable directly (no need to save preferences separately)
+      const response = await Promise.race([
+        api.post("/api/generate-timetable", { preferences: formattedPreferences }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), 30000) // 30 second timeout
+        )
+      ]);
+
       toast({
-        title: "Preferences saved!",
-        description: "Your preferences have been saved successfully.",
+        title: "Timetable generated successfully!",
+        description: "Your new timetable has been created and is now active.",
       });
 
-      // Then, trigger the generation
-      await api.post("/api/generate-timetable", { preferences });
-      toast({
-        title: "Timetable generation started!",
-        description: "Your new timetable is being generated. You will be notified when it's ready.",
-      });
+    } catch (error: any) {
+      console.error("Error during timetable generation:", error);
 
-    } catch (error) {
-      console.error("Error during timetable generation process:", error);
-      toast({
-        title: "An error occurred",
-        description: "Could not complete the timetable request. Please try again.",
-        variant: "destructive",
-      });
+      // Handle timeout specifically
+      if (error.message === 'Timeout') {
+        toast({
+          title: "Request timed out",
+          description: "Timetable generation is taking longer than expected. Please try with fewer subjects or simpler preferences.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Handle different error types
+      if (error.response?.status === 422) {
+        const validationErrors = error.response?.data?.errors || {};
+        const errorMessages = Object.entries(validationErrors)
+          .map(([field, messages]: [string, any]) =>
+            Array.isArray(messages) ? `${field}: ${messages.join(', ')}` : `${field}: ${messages}`
+          )
+          .join('\n');
+
+        toast({
+          title: "Validation Error",
+          description: errorMessages || "Please check your preferences and try again.",
+          variant: "destructive",
+        });
+      } else if (error.response?.status === 401) {
+        toast({
+          title: "Authentication Required",
+          description: "Please log in to generate a timetable.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "An error occurred",
+          description: error.response?.data?.message || "Could not generate timetable. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -159,12 +190,11 @@ const TimetableForm = () => {
     }));
   };
 
-  const handleSubjectsChange = (subjects: string[]) => {
+  const handleSubjectsChange = (subjects: number[]) => {
     setPreferences(prev => ({
       ...prev,
       subjects,
-      sections: [], // Reset sections when subjects change
-      lecturers: [], // Also reset lecturers
+      lecturers: [], // Reset lecturers when subjects change
     }));
   };
 
@@ -192,20 +222,6 @@ const TimetableForm = () => {
             />
           </div>
 
-          {/* Sections Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">Preferred Sections</h3>
-            </div>
-            <SectionSelector
-              selectedSections={preferences.sections}
-              onSectionsChange={(sections) => updatePreferences('sections', sections)}
-              selectedSubjects={preferences.subjects}
-              availableSections={availableOptions?.sections}
-              disabled={preferences.subjects.length === 0 || isLoadingOptions}
-            />
-          </div>
-
           {/* Days Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -214,8 +230,6 @@ const TimetableForm = () => {
             <DaySelector
               selectedDays={preferences.days}
               onDaysChange={(days) => updatePreferences('days', days)}
-              availableDays={availableOptions?.days}
-              disabled={isLoadingOptions}
             />
           </div>
 
@@ -223,7 +237,17 @@ const TimetableForm = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold">Time Preferences</h3>
+              {preferences.subjects.length > 0 && (
+                <span className="text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                  Filtered by selected subjects
+                </span>
+              )}
             </div>
+            {preferences.subjects.length === 0 && (
+              <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                ⚠️ Please select subjects first to see available time slots for your chosen courses.
+              </p>
+            )}
             <TimeSelector
               startTime={preferences.start_time}
               endTime={preferences.end_time}
@@ -231,8 +255,8 @@ const TimetableForm = () => {
                 updatePreferences('start_time', startTime);
                 updatePreferences('end_time', endTime);
               }}
-              availableTimeSlots={availableOptions?.time_slots}
-              disabled={isLoadingOptions}
+              selectedSubjects={preferences.subjects}
+              availableTimeSlots={filteredTimeSlots}
             />
           </div>
 
@@ -240,47 +264,66 @@ const TimetableForm = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <h3 className="text-lg font-semibold">Preferred Lecturers</h3>
+              <span className="text-sm text-gray-500">(Optional)</span>
             </div>
             <LecturerSelector
               selectedLecturers={preferences.lecturers}
               onLecturersChange={(lecturers) => updatePreferences('lecturers', lecturers)}
               availableLecturers={availableOptions?.lecturers}
-              disabled={preferences.subjects.length === 0 || isLoadingOptions}
+              disabled={preferences.subjects.length === 0}
             />
           </div>
 
-          {/* Schedule Style Section */}
+          {/* Enforce Ties Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold">Schedule Style</h3>
+              <h3 className="text-lg font-semibold">Tied Sections</h3>
             </div>
             <RadioGroup
-              value={preferences.schedule_style}
-              onValueChange={(value: 'compact' | 'spaced_out') =>
-                updatePreferences('schedule_style', value)
+              value={preferences.enforce_ties}
+              onValueChange={(value: 'yes' | 'no') =>
+                updatePreferences('enforce_ties', value)
               }
               className="flex gap-4"
             >
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="compact" id="r1" />
-                <Label htmlFor="r1">Compact</Label>
+                <RadioGroupItem value="yes" id="ties-yes" />
+                <Label htmlFor="ties-yes">Enforce ties (recommended)</Label>
               </div>
               <div className="flex items-center space-x-2">
-                <RadioGroupItem value="spaced_out" id="r2" />
-                <Label htmlFor="r2">Spaced Out</Label>
+                <RadioGroupItem value="no" id="ties-no" />
+                <Label htmlFor="ties-no">Allow separate selection</Label>
               </div>
             </RadioGroup>
             <p className="text-sm text-gray-500">
-              Compact schedules prioritize fewer days, while spaced out schedules distribute classes more evenly.
+              Enforcing ties automatically includes required tutorial/lab sections with lectures.
             </p>
           </div>
 
-          {/* Max Days Section */}
+          {/* Schedule Mode Section */}
           <div className="space-y-4">
-            <MaxDaysSelector
-              maxDays={preferences.max_days_per_week}
-              onMaxDaysChange={(maxDays) => updatePreferences('max_days_per_week', maxDays)}
-            />
+            <div className="flex items-center gap-2">
+              <h3 className="text-lg font-semibold">Schedule Mode</h3>
+            </div>
+            <RadioGroup
+              value={preferences.mode.toString()}
+              onValueChange={(value: string) =>
+                updatePreferences('mode', parseInt(value) as 1 | 2)
+              }
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="1" id="mode-compact" />
+                <Label htmlFor="mode-compact">Compact</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="2" id="mode-spaced" />
+                <Label htmlFor="mode-spaced">Spaced Out</Label>
+              </div>
+            </RadioGroup>
+            <p className="text-sm text-gray-500">
+              Compact schedules minimize gaps, while spaced out schedules maximize breaks between classes.
+            </p>
           </div>
 
           {/* Summary Section */}
@@ -291,22 +334,19 @@ const TimetableForm = () => {
                 <span className="font-medium">Subjects:</span> {preferences.subjects.length} selected
               </div>
               <div>
-                <span className="font-medium">Sections:</span> {preferences.sections.length} selected
-              </div>
-              <div>
                 <span className="font-medium">Days:</span> {preferences.days.length} selected
               </div>
               <div>
                 <span className="font-medium">Time:</span> {preferences.start_time} - {preferences.end_time}
               </div>
               <div>
-                <span className="font-medium">Lecturers:</span> {preferences.lecturers.length} selected
+                <span className="font-medium">Lecturers:</span> {preferences.lecturers.length} selected (optional)
               </div>
-              <div className="md:col-span-2">
-                <span className="font-medium">Max days per week:</span> {preferences.max_days_per_week}
+              <div>
+                <span className="font-medium">Tied Sections:</span> {preferences.enforce_ties === 'yes' ? 'Enforced' : 'Not enforced'}
               </div>
-              <div className="md:col-span-2">
-                <span className="font-medium">Schedule Style:</span> <span className="capitalize">{preferences.schedule_style.replace('_', ' ')}</span>
+              <div>
+                <span className="font-medium">Mode:</span> {preferences.mode === 1 ? 'Compact' : 'Spaced Out'}
               </div>
             </div>
           </div>
@@ -322,7 +362,7 @@ const TimetableForm = () => {
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                  Generating...
+                  Generating... (may take up to 30 seconds)
                 </>
               ) : (
                 'Generate My Timetable'

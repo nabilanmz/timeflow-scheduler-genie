@@ -6,8 +6,8 @@ import api from "@/lib/api";
 import { Subject } from "@/types/api";
 
 interface SubjectSelectorProps {
-  selectedSubjects: string[];
-  onSubjectsChange: (subjects: string[]) => void;
+  selectedSubjects: number[];
+  onSubjectsChange: (subjects: number[]) => void;
 }
 
 const SubjectSelector = ({ selectedSubjects, onSubjectsChange }: SubjectSelectorProps) => {
@@ -32,13 +32,13 @@ const SubjectSelector = ({ selectedSubjects, onSubjectsChange }: SubjectSelector
     fetchSubjects();
   }, []);
 
-  const addSubject = (subjectId: string) => {
+  const addSubject = (subjectId: number) => {
     if (!selectedSubjects.includes(subjectId)) {
       onSubjectsChange([...selectedSubjects, subjectId]);
     }
   };
 
-  const removeSubject = (subjectId: string) => {
+  const removeSubject = (subjectId: number) => {
     onSubjectsChange(selectedSubjects.filter(id => id !== subjectId));
   };
 
@@ -46,7 +46,7 @@ const SubjectSelector = ({ selectedSubjects, onSubjectsChange }: SubjectSelector
     subject.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getSubjectById = (id: string) => allSubjects.find(s => s.id.toString() === id);
+  const getSubjectById = (id: number) => allSubjects.find(s => s.id === id);
 
   return (
     <div className="space-y-4">
@@ -67,7 +67,7 @@ const SubjectSelector = ({ selectedSubjects, onSubjectsChange }: SubjectSelector
                   <BookOpen className="h-3 w-3 mr-1" />
                   {subject.name}
                   <button
-                    onClick={() => removeSubject(subject.id.toString())}
+                    onClick={() => removeSubject(subject.id)}
                     className="ml-2 hover:text-red-600"
                   >
                     <X className="h-3 w-3" />
@@ -95,17 +95,22 @@ const SubjectSelector = ({ selectedSubjects, onSubjectsChange }: SubjectSelector
         {filteredSubjects.map((subject) => (
           <div
             key={subject.id}
-            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${selectedSubjects.includes(subject.id.toString())
-              ? "bg-blue-50 border border-blue-200"
-              : "hover:bg-gray-50"
-              }`}
-            onClick={() => selectedSubjects.includes(subject.id.toString()) ? removeSubject(subject.id.toString()) : addSubject(subject.id.toString())}
+            className={`flex items-center justify-between p-2 rounded cursor-pointer transition-colors ${
+              selectedSubjects.includes(subject.id)
+                ? "bg-blue-50 border border-blue-200"
+                : "hover:bg-gray-50"
+            }`}
+            onClick={() =>
+              selectedSubjects.includes(subject.id)
+                ? removeSubject(subject.id)
+                : addSubject(subject.id)
+            }
           >
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-gray-500" />
               <span className="text-sm">{subject.name}</span>
             </div>
-            {selectedSubjects.includes(subject.id.toString()) && (
+            {selectedSubjects.includes(subject.id) && (
               <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
             )}
           </div>

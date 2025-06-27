@@ -30,10 +30,16 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data } = await api.get('/api/user');
-        setUser(data);
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          const { data } = await api.get('/api/user');
+          setUser(data);
+        } else {
+          setUser(null);
+        }
       } catch (error) {
         setUser(null);
+        localStorage.removeItem('auth_token');
       } finally {
         setLoading(false);
       }
@@ -44,11 +50,13 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      await api.post('/api/login', { email, password });
-      const { data } = await api.get('/api/user');
-      setUser(data);
+      const { data } = await api.post('/api/login', { email, password });
+      localStorage.setItem('auth_token', data.token);
+      const userResponse = await api.get('/api/user');
+      setUser(userResponse.data);
     } catch (error) {
       setUser(null);
+      localStorage.removeItem('auth_token');
       throw error;
     } finally {
       setLoading(false);
@@ -59,9 +67,12 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     setLoading(true);
     try {
       await api.post('/api/logout');
+      localStorage.removeItem('auth_token');
       setUser(null);
     } catch (error) {
       console.error('Logout failed', error);
+      localStorage.removeItem('auth_token');
+      setUser(null);
     } finally {
       setLoading(false);
     }

@@ -8,27 +8,34 @@ interface TimeSelectorProps {
   startTime: string;
   endTime: string;
   onTimeChange: (startTime: string, endTime: string) => void;
+  selectedSubjects?: number[];
+  availableTimeSlots?: TimeSlot[];
 }
 
-const TimeSelector = ({ startTime, endTime, onTimeChange }: TimeSelectorProps) => {
+const TimeSelector = ({ startTime, endTime, onTimeChange, selectedSubjects = [], availableTimeSlots }: TimeSelectorProps) => {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
 
   useEffect(() => {
-    const fetchTimeSlots = async () => {
-      try {
-        const res = await api.get("/api/timeslots");
-        if (res.data && Array.isArray(res.data)) {
-          setTimeSlots(res.data);
-        } else {
+    // Use provided timeSlots if available, otherwise fetch all
+    if (availableTimeSlots) {
+      setTimeSlots(availableTimeSlots);
+    } else {
+      const fetchTimeSlots = async () => {
+        try {
+          const res = await api.get("/api/timeslots");
+          if (res.data && Array.isArray(res.data)) {
+            setTimeSlots(res.data);
+          } else {
+            setTimeSlots([]);
+          }
+        } catch (error) {
+          console.error("Error fetching time slots:", error);
           setTimeSlots([]);
         }
-      } catch (error) {
-        console.error("Error fetching time slots:", error);
-        setTimeSlots([]);
-      }
-    };
-    fetchTimeSlots();
-  }, []);
+      };
+      fetchTimeSlots();
+    }
+  }, [availableTimeSlots]);
 
   const handleStartTimeChange = (newStartTime: string) => {
     onTimeChange(newStartTime, endTime);
@@ -79,7 +86,7 @@ const TimeSelector = ({ startTime, endTime, onTimeChange }: TimeSelectorProps) =
             </SelectTrigger>
             <SelectContent>
               {timeSlots.map(slot => (
-                <SelectItem key={`start-${slot.id}`} value={slot.start_time.substring(0, 5)}>
+                <SelectItem key={`start-${slot.id}`} value={slot.start_time}>
                   {slot.start_time.substring(0, 5)}
                 </SelectItem>
               ))}
@@ -96,7 +103,7 @@ const TimeSelector = ({ startTime, endTime, onTimeChange }: TimeSelectorProps) =
             </SelectTrigger>
             <SelectContent>
               {timeSlots.map(slot => (
-                <SelectItem key={`end-${slot.id}`} value={slot.end_time.substring(0, 5)}>
+                <SelectItem key={`end-${slot.id}`} value={slot.end_time}>
                   {slot.end_time.substring(0, 5)}
                 </SelectItem>
               ))}
@@ -125,8 +132,9 @@ const TimeSelector = ({ startTime, endTime, onTimeChange }: TimeSelectorProps) =
 };
 
 const calculateDuration = (start: string, end: string): string => {
-  const [startHour, startMinute] = start.split(':').map(Number);
-  const [endHour, endMinute] = end.split(':').map(Number);
+  // Handle both HH:MM and HH:MM:SS formats
+  const [startHour, startMinute] = start.split(':').slice(0, 2).map(Number);
+  const [endHour, endMinute] = end.split(':').slice(0, 2).map(Number);
 
   const startDate = new Date(0, 0, 0, startHour, startMinute);
   const endDate = new Date(0, 0, 0, endHour, endMinute);

@@ -1,0 +1,2451 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Timetable API",
+        "description": "API documentation for the Timetable application",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/register": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Register a new user",
+                "operationId": "8a56853624e025573120a09a4c75d468",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john.doe@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Log in a user",
+                "operationId": "a3b306d14572d1f4bd6c064b3233e7b8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "john.doe@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful login",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout the authenticated user",
+                "operationId": "fe8f3429cd6979b3b4517e186505f9f9",
+                "responses": {
+                    "200": {
+                        "description": "Logged out successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/user": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get authenticated user",
+                "operationId": "7c1cf647d76fad4b3eb1549fa4fe2f4c",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/days": {
+            "get": {
+                "tags": [
+                    "Days"
+                ],
+                "summary": "Get list of days",
+                "description": "Returns list of days",
+                "operationId": "getDaysList",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Day"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/generate-timetable": {
+            "post": {
+                "tags": [
+                    "Generated Timetables"
+                ],
+                "summary": "Generate a new optimized timetable",
+                "description": "Generates a new timetable based on user preferences using advanced genetic algorithm optimization. Supports activity types (Lecture/Tutorial/Lab), tied sections, lecturer preferences, time constraints, and two optimization modes.",
+                "operationId": "generateTimetable",
+                "requestBody": {
+                    "description": "Timetable generation preferences",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TimetableGenerationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Timetable generated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GeneratedTimetable"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error or no valid sections found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Error message",
+                                            "type": "string"
+                                        },
+                                        "details": {
+                                            "description": "Additional error details",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated - Bearer token required"
+                    },
+                    "500": {
+                        "description": "Internal server error - Timetable generation engine failure",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "description": "Error message",
+                                            "type": "string"
+                                        },
+                                        "error_details": {
+                                            "description": "Technical error details",
+                                            "type": "string"
+                                        },
+                                        "exit_code": {
+                                            "description": "Process exit code",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/my-timetable": {
+            "get": {
+                "tags": [
+                    "Generated Timetables"
+                ],
+                "summary": "Get the user's active timetable",
+                "description": "Retrieves the currently active generated timetable for the authenticated user. Each user can have only one active timetable at a time.",
+                "operationId": "getActiveGeneratedTimetable",
+                "responses": {
+                    "200": {
+                        "description": "Active timetable retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GeneratedTimetable"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated - Bearer token required"
+                    },
+                    "404": {
+                        "description": "No active timetable found for this user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "No query results for model [App\\\\Models\\\\GeneratedTimetable]."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/lecturers": {
+            "get": {
+                "tags": [
+                    "Lecturers"
+                ],
+                "summary": "Get list of lecturers",
+                "description": "Returns list of lecturers",
+                "operationId": "getLecturersList",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Lecturer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Lecturers"
+                ],
+                "summary": "Store new lecturer",
+                "description": "Returns lecturer data",
+                "operationId": "storeLecturer",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Lecturer"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Lecturer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    }
+                }
+            }
+        },
+        "/api/lecturers/{id}": {
+            "get": {
+                "tags": [
+                    "Lecturers"
+                ],
+                "summary": "Get lecturer information",
+                "description": "Returns lecturer data",
+                "operationId": "getLecturerById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Lecturer id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Lecturer"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Lecturers"
+                ],
+                "summary": "Update existing lecturer",
+                "description": "Returns updated lecturer data",
+                "operationId": "updateLecturer",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Lecturer id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Lecturer"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Lecturer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Lecturers"
+                ],
+                "summary": "Delete existing lecturer",
+                "description": "Deletes a record and returns no content",
+                "operationId": "deleteLecturer",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Lecturer id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                }
+            }
+        },
+        "/api/preference-options": {
+            "get": {
+                "tags": [
+                    "Timetable Preferences"
+                ],
+                "summary": "Get available preference options",
+                "description": "Returns available subjects and lecturers for timetable preferences",
+                "operationId": "getPreferenceOptions",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "subjects": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "lecturers": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "name": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/sections": {
+            "get": {
+                "tags": [
+                    "Sections"
+                ],
+                "summary": "List all sections",
+                "description": "Get a list of all available course sections, with optional search functionality.",
+                "operationId": "ec6bc0921c4783e5344d7c888da6f7e8",
+                "parameters": [
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search term to filter sections by subject name, code, lecturer, or section number.",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "A list of sections.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Section"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Sections"
+                ],
+                "summary": "Create a new section",
+                "description": "Create a new course section. Requires admin privileges.",
+                "operationId": "19722ad20ff1546bf005fc809c6e5d75",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Section"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Section created successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Section"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/sections/{section}": {
+            "get": {
+                "tags": [
+                    "Sections"
+                ],
+                "summary": "Get a single section",
+                "description": "Retrieve detailed information for a specific section.",
+                "operationId": "991aac5e14678d649d7635922353a14c",
+                "parameters": [
+                    {
+                        "name": "section",
+                        "in": "path",
+                        "description": "The UUID of the section.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The section details.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Section"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Section not found."
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Sections"
+                ],
+                "summary": "Update a section",
+                "description": "Update an existing course section. Requires admin privileges.",
+                "operationId": "fff9a7dc032e0977a3de2c71cff23cd2",
+                "parameters": [
+                    {
+                        "name": "section",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Section"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Section updated successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Section"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Section not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Sections"
+                ],
+                "summary": "Delete a section",
+                "description": "Delete a course section. Requires admin privileges.",
+                "operationId": "896076f2917a50f58a3a506561a1dde8",
+                "parameters": [
+                    {
+                        "name": "section",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Section deleted successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Section not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/settings": {
+            "get": {
+                "tags": [
+                    "Settings"
+                ],
+                "summary": "Get all settings",
+                "description": "Returns a key-value pair of all settings",
+                "operationId": "getSettings",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SettingsList"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Settings"
+                ],
+                "summary": "Update settings",
+                "description": "Updates multiple settings at once",
+                "operationId": "updateSettings",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SettingsList"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    }
+                }
+            }
+        },
+        "/api/subjects": {
+            "get": {
+                "tags": [
+                    "Subjects"
+                ],
+                "summary": "Get list of subjects",
+                "description": "Returns list of subjects",
+                "operationId": "getSubjectsList",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Subject"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Subjects"
+                ],
+                "summary": "Store new subject",
+                "description": "Returns subject data",
+                "operationId": "storeSubject",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Subject"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Subject"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    }
+                }
+            }
+        },
+        "/api/subjects/{id}": {
+            "get": {
+                "tags": [
+                    "Subjects"
+                ],
+                "summary": "Get subject information",
+                "description": "Returns subject data",
+                "operationId": "getSubjectById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Subject id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Subject"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Subjects"
+                ],
+                "summary": "Update existing subject",
+                "description": "Returns updated subject data",
+                "operationId": "updateSubject",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Subject id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Subject"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Subject"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Subjects"
+                ],
+                "summary": "Delete existing subject",
+                "description": "Deletes a record and returns no content",
+                "operationId": "deleteSubject",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Subject id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                }
+            }
+        },
+        "/api/time-slots": {
+            "get": {
+                "tags": [
+                    "TimeSlots"
+                ],
+                "summary": "Get list of time slots",
+                "description": "Returns list of time slots",
+                "operationId": "getTimeSlotsList",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TimeSlot"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/timetable-change-requests": {
+            "get": {
+                "tags": [
+                    "Timetable Change Requests"
+                ],
+                "summary": "Get list of timetable change requests (Admin only)",
+                "description": "Returns list of timetable change requests",
+                "operationId": "getChangeRequestsList",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TimetableChangeRequest"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Timetable Change Requests"
+                ],
+                "summary": "Store new timetable change request",
+                "description": "Returns change request data",
+                "operationId": "storeChangeRequest",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "generated_timetable_id",
+                                    "message"
+                                ],
+                                "properties": {
+                                    "generated_timetable_id": {
+                                        "type": "integer"
+                                    },
+                                    "message": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TimetableChangeRequest"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/timetable-change-requests/{id}": {
+            "get": {
+                "tags": [
+                    "Timetable Change Requests"
+                ],
+                "summary": "Get change request information (Admin or owner)",
+                "description": "Returns change request data",
+                "operationId": "getChangeRequestById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Change Request id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TimetableChangeRequest"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Timetable Change Requests"
+                ],
+                "summary": "Update existing change request (Admin only)",
+                "description": "Returns updated change request data",
+                "operationId": "updateChangeRequest",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Change Request id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pending",
+                                            "approved",
+                                            "rejected"
+                                        ]
+                                    },
+                                    "admin_response": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TimetableChangeRequest"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Timetable Change Requests"
+                ],
+                "summary": "Delete existing change request (Admin only)",
+                "description": "Deletes a record and returns no content",
+                "operationId": "deleteChangeRequest",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Change Request id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/timetables": {
+            "get": {
+                "tags": [
+                    "Timetables"
+                ],
+                "summary": "Get list of timetables for the authenticated user",
+                "description": "Returns list of timetables",
+                "operationId": "getTimetablesList",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Timetable"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Timetables"
+                ],
+                "summary": "Store new timetable",
+                "description": "Returns timetable data",
+                "operationId": "storeTimetable",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Timetable"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Timetable"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/timetables/{id}": {
+            "get": {
+                "tags": [
+                    "Timetables"
+                ],
+                "summary": "Get timetable information",
+                "description": "Returns timetable data",
+                "operationId": "getTimetableById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Timetable id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Timetable"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Timetables"
+                ],
+                "summary": "Update existing timetable",
+                "description": "Returns updated timetable data",
+                "operationId": "updateTimetable",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Timetable id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Timetable"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Timetable"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Timetables"
+                ],
+                "summary": "Delete existing timetable",
+                "description": "Deletes a record and returns no content",
+                "operationId": "deleteTimetable",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Timetable id",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Resource Not Found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/timetable-preferences": {
+            "post": {
+                "tags": [
+                    "Timetable Preferences"
+                ],
+                "summary": "Store or update user's timetable preferences",
+                "description": "Returns the created or updated preference data",
+                "operationId": "storeTimetablePreference",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/TimetablePreferenceRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TimetablePreference"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/timetable-preferences/options": {
+            "get": {
+                "tags": [
+                    "Timetable Preferences"
+                ],
+                "summary": "Get available options for timetable preferences",
+                "description": "Returns available subjects, days, time slots, and lecturers",
+                "operationId": "getTimetablePreferenceOptions",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/timetables/{timetable}/sections": {
+            "post": {
+                "tags": [
+                    "Timetables"
+                ],
+                "summary": "Add a section to a timetable",
+                "operationId": "0813d26fc241b102d86c6bd929fe23bf",
+                "parameters": [
+                    {
+                        "name": "timetable",
+                        "in": "path",
+                        "description": "ID of the timetable",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "section_id"
+                                ],
+                                "properties": {
+                                    "section_id": {
+                                        "description": "ID of the section to add",
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Section added successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/timetables/{timetable}/sections/{section}": {
+            "delete": {
+                "tags": [
+                    "Timetables"
+                ],
+                "summary": "Remove a section from a timetable",
+                "operationId": "b1f39d324c0c7aaaef0f580432b2ee82",
+                "parameters": [
+                    {
+                        "name": "timetable",
+                        "in": "path",
+                        "description": "ID of the timetable",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "section",
+                        "in": "path",
+                        "description": "ID of the section to remove",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Section removed successfully"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Day": {
+                "title": "Day",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": "true",
+                        "example": "1"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Monday"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    }
+                },
+                "type": "object"
+            },
+            "GeneratedTimetable": {
+                "title": "Generated Timetable",
+                "description": "A user's generated timetable containing optimized class schedules",
+                "properties": {
+                    "id": {
+                        "description": "Unique identifier",
+                        "type": "integer",
+                        "readOnly": "true"
+                    },
+                    "user_id": {
+                        "description": "ID of the user who owns this timetable",
+                        "type": "integer",
+                        "readOnly": "true"
+                    },
+                    "timetable": {
+                        "$ref": "#/components/schemas/TimetableData"
+                    },
+                    "active": {
+                        "description": "Whether this is the user's currently active timetable",
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    }
+                },
+                "type": "object"
+            },
+            "TimetableData": {
+                "title": "Timetable Data",
+                "description": "The structured timetable data generated by the optimization engine",
+                "properties": {
+                    "Monday": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GeneratedTimetableEntry"
+                        }
+                    },
+                    "Tuesday": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GeneratedTimetableEntry"
+                        }
+                    },
+                    "Wednesday": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GeneratedTimetableEntry"
+                        }
+                    },
+                    "Thursday": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GeneratedTimetableEntry"
+                        }
+                    },
+                    "Friday": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GeneratedTimetableEntry"
+                        }
+                    },
+                    "Saturday": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GeneratedTimetableEntry"
+                        }
+                    },
+                    "Sunday": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/GeneratedTimetableEntry"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "GeneratedTimetableEntry": {
+                "title": "Generated Timetable Entry",
+                "description": "A single class entry in the generated timetable",
+                "properties": {
+                    "code": {
+                        "description": "Subject code",
+                        "type": "string",
+                        "example": "LMPU3192"
+                    },
+                    "subject": {
+                        "description": "Subject name",
+                        "type": "string",
+                        "example": "Falsafah dan Isu Semasa"
+                    },
+                    "activity": {
+                        "description": "Type of class activity",
+                        "type": "string",
+                        "enum": [
+                            "Lecture",
+                            "Tutorial",
+                            "Lab"
+                        ]
+                    },
+                    "section": {
+                        "description": "Section identifier",
+                        "type": "string",
+                        "example": "FCI1"
+                    },
+                    "days": {
+                        "description": "Day of the week",
+                        "type": "string",
+                        "example": "Monday"
+                    },
+                    "start_time": {
+                        "description": "Start time",
+                        "type": "string",
+                        "format": "time",
+                        "example": "10:00:00"
+                    },
+                    "end_time": {
+                        "description": "End time",
+                        "type": "string",
+                        "format": "time",
+                        "example": "12:00:00"
+                    },
+                    "venue": {
+                        "description": "Classroom venue",
+                        "type": "string",
+                        "example": "CNMX1001"
+                    },
+                    "lecturer": {
+                        "description": "Lecturer name",
+                        "type": "string",
+                        "example": "Dr. John Smith"
+                    },
+                    "tied_to": {
+                        "description": "Related sections that must be taken together",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "TimetableGenerationRequest": {
+                "title": "Timetable Generation Request",
+                "description": "Request payload for generating a new timetable",
+                "required": [
+                    "preferences"
+                ],
+                "properties": {
+                    "preferences": {
+                        "required": [
+                            "subjects",
+                            "days",
+                            "start_time",
+                            "end_time",
+                            "enforce_ties",
+                            "mode"
+                        ],
+                        "properties": {
+                            "subjects": {
+                                "description": "Array of subject IDs to include in the timetable",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    1,
+                                    2,
+                                    3
+                                ]
+                            },
+                            "days": {
+                                "description": "Array of day IDs indicating preferred days",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    1,
+                                    2,
+                                    3,
+                                    4,
+                                    5
+                                ]
+                            },
+                            "start_time": {
+                                "description": "Preferred earliest start time (HH:MM format)",
+                                "type": "string",
+                                "format": "time",
+                                "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$",
+                                "example": "08:00"
+                            },
+                            "end_time": {
+                                "description": "Preferred latest end time (HH:MM format)",
+                                "type": "string",
+                                "format": "time",
+                                "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$",
+                                "example": "18:00"
+                            },
+                            "enforce_ties": {
+                                "description": "Whether to enforce tied sections (lecture-tutorial pairs)",
+                                "type": "string",
+                                "enum": [
+                                    "yes",
+                                    "no"
+                                ],
+                                "example": "yes"
+                            },
+                            "lecturers": {
+                                "description": "Optional array of preferred lecturer IDs",
+                                "type": "array",
+                                "items": {
+                                    "type": "integer"
+                                },
+                                "example": [
+                                    1,
+                                    5,
+                                    10
+                                ]
+                            },
+                            "mode": {
+                                "description": "Schedule optimization mode: 1=compact (minimize gaps), 2=spaced_out (maximize breaks)",
+                                "type": "integer",
+                                "enum": [
+                                    1,
+                                    2
+                                ],
+                                "example": 1
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "Lecturer": {
+                "title": "Lecturer",
+                "required": [
+                    "name",
+                    "email"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": "true",
+                        "example": "1"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "John Doe"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "john.doe@example.com"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "123-456-7890"
+                    },
+                    "department": {
+                        "type": "string",
+                        "example": "Computer Science"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    }
+                },
+                "type": "object"
+            },
+            "SettingsList": {
+                "title": "Settings List",
+                "properties": {
+                    "max_subjects_per_day": {
+                        "type": "string",
+                        "example": "5"
+                    },
+                    "max_concurrent_subjects": {
+                        "type": "string",
+                        "example": "3"
+                    }
+                },
+                "type": "object"
+            },
+            "Subject": {
+                "title": "Subject",
+                "required": [
+                    "name",
+                    "code"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": "true",
+                        "example": "1"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Introduction to Programming"
+                    },
+                    "code": {
+                        "type": "string",
+                        "example": "CS101"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "An introductory subject on programming fundamentals."
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    }
+                },
+                "type": "object"
+            },
+            "TimeSlot": {
+                "title": "TimeSlot",
+                "required": [
+                    "start_time",
+                    "end_time"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": "true",
+                        "example": "1"
+                    },
+                    "start_time": {
+                        "type": "string",
+                        "format": "time",
+                        "example": "09:00:00"
+                    },
+                    "end_time": {
+                        "type": "string",
+                        "format": "time",
+                        "example": "10:00:00"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    }
+                },
+                "type": "object"
+            },
+            "TimetableChangeRequest": {
+                "title": "Timetable Change Request",
+                "required": [
+                    "generated_timetable_id",
+                    "message"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": "true"
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "readOnly": "true"
+                    },
+                    "generated_timetable_id": {
+                        "type": "integer"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "default": "pending",
+                        "enum": [
+                            "pending",
+                            "approved",
+                            "rejected"
+                        ]
+                    },
+                    "admin_response": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "generated_timetable": {
+                        "$ref": "#/components/schemas/GeneratedTimetable"
+                    }
+                },
+                "type": "object"
+            },
+            "Timetable": {
+                "title": "Timetable",
+                "required": [
+                    "name"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": "true"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "created_by": {
+                        "type": "integer",
+                        "readOnly": "true"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "timetable_entries": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TimetableEntry"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "TimetablePreferenceRequest": {
+                "title": "Timetable Preference Request",
+                "required": [
+                    "preferences"
+                ],
+                "properties": {
+                    "preferences": {
+                        "description": "A key-value object of user preferences for timetable generation.",
+                        "type": "object",
+                        "example": {
+                            "prefer_morning": true,
+                            "max_consecutive_classes": 3
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "Section": {
+                "title": "Section",
+                "description": "A course section with activity type and tied relationships.",
+                "properties": {
+                    "id": {
+                        "description": "Primary key",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "subject_id": {
+                        "description": "Foreign key for the subject",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "section_number": {
+                        "description": "The section identifier (alphanumeric)",
+                        "type": "string",
+                        "example": "FCI1"
+                    },
+                    "activity": {
+                        "description": "Type of class activity",
+                        "type": "string",
+                        "enum": [
+                            "Lecture",
+                            "Tutorial",
+                            "Lab"
+                        ]
+                    },
+                    "lecturer_id": {
+                        "description": "Foreign key for the lecturer",
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "start_time": {
+                        "description": "Class start time",
+                        "type": "string",
+                        "format": "time"
+                    },
+                    "end_time": {
+                        "description": "Class end time",
+                        "type": "string",
+                        "format": "time"
+                    },
+                    "day_of_week": {
+                        "description": "Day of the week for the class",
+                        "type": "string"
+                    },
+                    "venue": {
+                        "description": "Location of the class",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "capacity": {
+                        "description": "Maximum number of students",
+                        "type": "integer"
+                    },
+                    "tied_to": {
+                        "description": "Array of section numbers that must be taken together",
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "nullable": true
+                    },
+                    "enrolled_students": {
+                        "description": "Number of students currently enrolled",
+                        "type": "integer"
+                    },
+                    "status": {
+                        "description": "Availability status",
+                        "type": "string",
+                        "enum": [
+                            "Available",
+                            "Full"
+                        ]
+                    },
+                    "subject": {
+                        "$ref": "#/components/schemas/Subject"
+                    },
+                    "lecturer": {
+                        "$ref": "#/components/schemas/Lecturer"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "TimetableEntry": {
+                "title": "Timetable Entry",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": "true"
+                    },
+                    "timetable_id": {
+                        "type": "integer"
+                    },
+                    "subject_id": {
+                        "type": "integer"
+                    },
+                    "lecturer_id": {
+                        "type": "integer"
+                    },
+                    "day_id": {
+                        "type": "integer"
+                    },
+                    "time_slot_id": {
+                        "type": "integer"
+                    },
+                    "activity": {
+                        "type": "string"
+                    },
+                    "section": {
+                        "type": "string"
+                    },
+                    "venue": {
+                        "type": "string"
+                    },
+                    "tied_to": {
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "subject": {
+                        "$ref": "#/components/schemas/Subject"
+                    },
+                    "lecturer": {
+                        "$ref": "#/components/schemas/Lecturer"
+                    },
+                    "day": {
+                        "$ref": "#/components/schemas/Day"
+                    },
+                    "time_slot": {
+                        "$ref": "#/components/schemas/TimeSlot"
+                    }
+                },
+                "type": "object"
+            },
+            "TimetablePreference": {
+                "title": "Timetable Preference",
+                "required": [
+                    "preferences"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": "true"
+                    },
+                    "user_id": {
+                        "type": "integer",
+                        "readOnly": "true"
+                    },
+                    "preferences": {
+                        "type": "object",
+                        "additionalProperties": true
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "title": "User",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "readOnly": "true"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "is_admin": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "readOnly": "true"
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Timetable Preferences",
+            "description": "Endpoints for timetable preference options"
+        },
+        {
+            "name": "Timetables",
+            "description": "Endpoints for managing timetables"
+        },
+        {
+            "name": "Authentication",
+            "description": "Authentication"
+        },
+        {
+            "name": "Days",
+            "description": "Days"
+        },
+        {
+            "name": "Generated Timetables",
+            "description": "Generated Timetables"
+        },
+        {
+            "name": "Lecturers",
+            "description": "Lecturers"
+        },
+        {
+            "name": "Sections",
+            "description": "Sections"
+        },
+        {
+            "name": "Settings",
+            "description": "Settings"
+        },
+        {
+            "name": "Subjects",
+            "description": "Subjects"
+        },
+        {
+            "name": "TimeSlots",
+            "description": "TimeSlots"
+        },
+        {
+            "name": "Timetable Change Requests",
+            "description": "Timetable Change Requests"
+        }
+    ]
+}
